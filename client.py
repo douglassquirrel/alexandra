@@ -25,7 +25,6 @@ def init_channel():
 def get_position_update(channel):
     message = channel.basic_get(0, 'position', no_ack=True)[2]
     if message:
-        print "Received %s" % (message,)
         return loads(message)[0:2]
     else:
         return None
@@ -49,7 +48,6 @@ def send_input(input, channel):
     channel.basic_publish(exchange='',
                           routing_key='input',
                           body=dumps(input))
-    print "Sent %s" % (input,)
 
 def do_position_update(window, new_position):
     x, y = new_position
