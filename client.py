@@ -1,19 +1,13 @@
-from json import dumps, loads
+from json import dumps, load, loads
 from pika import BlockingConnection, ConnectionParameters
 from pygame import display, draw, event, init, key, quit, Rect
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
 from sys import exit
 from time import sleep
+from urllib2 import URLError, urlopen
 
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
-TICK = 0.02
-
-def init_window():
-    init()
-    window = display.set_mode((400, 400), 0, 32)
-    display.set_caption('Alexandra')
-    return window
 
 def init_channel():
     connection = BlockingConnection(ConnectionParameters('localhost'))
@@ -21,6 +15,32 @@ def init_channel():
     channel.queue_declare(queue='position')
     channel.queue_declare(queue='input')
     return channel
+
+def init_config(channel):
+    channel.queue_declare(queue='library_url')
+    sleep(1)
+    library_url = channel.basic_get(0, 'library_url', no_ack=True)[2]
+    if not library_url:
+        print "No library url published, cannot fetch config - exiting client"
+        exit(1)
+
+    config_url = library_url + '/config.json'
+    try:
+        config_file = urlopen(config_url)
+    except URLError:
+        print "No config file at %s - exiting player" % (config_url,)
+        exit(1)
+    config = load(config_file)
+    return {'field_width': config['field_width'],
+            'field_height': config['field_height'],
+            'tick': config['tick_seconds']}
+
+def init_window(config):
+    init()
+    field_size = (config['field_width'], config['field_height'])
+    window = display.set_mode(field_size, 0, 32)
+    display.set_caption('Alexandra')
+    return window
 
 def get_position_update(channel):
     message = channel.basic_get(0, 'position', no_ack=True)[2]
@@ -55,7 +75,7 @@ def do_position_update(window, new_position):
     draw.rect(window, YELLOW, Rect(x, y, 50, 50))
     display.update()
 
-def main_loop(window, channel):
+def main_loop(window, channel, config):
     while True:
         new_position = get_position_update(channel)
         if new_position:
@@ -64,6 +84,8 @@ def main_loop(window, channel):
         for input in input_list:
             send_input(input, channel)
         check_quit()
-        sleep(TICK)
+        sleep(config['tick'])
 
-main_loop(init_window(), init_channel())
+channel = init_channel()
+config = init_config(channel)
+main_loop(init_window(config), channel, config)
