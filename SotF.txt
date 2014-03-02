@@ -1,0 +1,129 @@
+*Survival of the Fittest: Using Selection Pressure to Evolve Software*
+
+"Death is very likely the single best invention of Life. It is Life's change agent. It clears out the old to make way for the new." - Steve Jobs
+
+It's hard to be precious about your code these days. Techniques like TDD, refactoring, and pairing force us to take a hard look at our functions and classes and refine, replace, or discard them. The feedback from tests or from other members of the team can be hard to take, but the broad consensus appears to be that measuring our code against internally agreed specifications and standards helps us raise its quality and maintainability. Like the best writers, we do indeed "murder our darlings" [1].
+
+But these techniques are less successful when it comes to reaping and replacing on a larger scale. A detailed suite of unit and acceptance tests that specify the state transitions of objects in an OO system won't help you much if your goal is to switch to a functional design using immutable data structures. And the incremental improvement methods of refactoring have little to say about changing languages, unless you've found a clever way to convert a Java class to Python a few lines at a time [2].
+
+A few very successful teams seem to have cracked this problem. They have invented ways to construct their software out of many communicating subprograms, each containing a small number of functions or classes and each easily replaceable, and they use _external_ metrics - clicks, orders, uptime, profits - to provide feedback on each such component. They are willing, in fact eager, to discard and rewrite these components rapidly and repeatedly to wring out the best performance against those metrics - including changing algorithms, designs, languages, and platforms. The result is that their systems change and improve so fast that an analogy to evolutionary biology appears to be fruitful: I call them Survival of the Fittest (SotF) systems [3], and I think they offer significant competitive advantages for some of our most challenging current software problems.
+
+**Characteristics of an SotF System**
+
+An SotF system has most or all of these characteristics:
+* _Components_ of the system are independent programs in their own right, typically built, tested, and deployed separately. Components co-operate, if necessary, through communication mechanisms such as a messaging layer or a common database [4].
+* Each component occupies a _niche_ that describes its function in the overall system - for instance in an e-commerce system, niches might include "add products", "accept orders", and "update stock levels".
+* Components exhibit a range of _morphologies_ [5]. The morphology of a component describes its design and how it fulfills the niche assignment: one component might use object-oriented Java and implement a deterministic algorithm, while another might be written in functional Python and use a Monte Carlo method.
+* The production environment provides timely, measurable, and unequivocal _feedback_ on performance - such as rate of usage, level of profit, or accuracy of results.
+* Environmental feedback is used to give components _fitness metrics_ that tell us how well they suit their niches. 
+* System operators apply _selection pressure_ by discarding components that are less fit and introducing new components that (they hope) are more fit. 
+* Two measurements of the amount of selection pressure being applied are the _rate of speciation_ (the speed at which new components appear) and the _rate of extinction_ (the speed at which old, less-fit components depart). 
+
+**Measuring Fitness**
+
+As fitness measurements are central to the rapid evolution of a SotF system, it might not be surprising that their design lends itself to several useful measurement methods.
+
+In the simplest case, we can measure fitness for components individually, if the components are _independent_. For example, if we have a financial trading system in which each component makes a series of trades in a market, the profit or loss of each component over a suitable period gives us a simple and business-meaningful estimate of its fitness.
+
+In other circumstances, we may only be able to measure fitness for a group of _dependent_ components, as in an e-commerce system where we can determine the conversion rate of an order process but not of individual components providing pricing, discounts, and credit-card management. In such cases we can still get a fitness metric for an individual component by varying which component fills a niche within the larger process and comparing the measured fitness metrics for each combination. This is commonly known as an A/B test and is used most frequently in non-SotF systems to compare two user-interface choices, as the front end is the easiest layer in which to vary behaviour. In a SotF system - or a particularly flexible non-SotF system - comparing more than two alternatives is just as easy, and there is no reason to be restricted to UI components.
+
+A more radical method of gauging fitness is simply to run two (or more) components in the same niche at the same time, each accepting the same inputs from the rest of the system, and to introduce a "judge" component that compares their outputs and takes appropriate action. The judge might, for example, choose only to accept and promulgate output from a favoured component, perhaps an older one that we trust more. Or it might take a vote among the contenders, accepting the output most of them favour. In either case, we can record the outputs from each competing component and use this record to estimate fitness - examining differences manually, or replaying in a test environment to see how each performs [6].
+
+**Case Studies**
+
+I have come across several software development teams that are using SotF designs in their software successfully. Space doesn't allow me to present a full view of each of these architectures, but I can describe what I know about each and refer the reader to more comprehensive descriptions of the teams and their practises. I am actively seeking other teams using similar practises and would welcome references to such development groups from readers.
+
+***DRW***
+
+DRW Trading Group is a high-frequency trading firm whose business and trading
+strategy changes very rapidly. Dan North [http://dannorth.net/] has described
+his experiences there in a talk [http://vimeo.com/43659070] and slides
+[http://qconlondon.com/dl/qcon-london-2012/slides/DanNorth_DecisionsDecisions.pdf]
+
+Briefly, as I understand it, DRW's developers create small, expendable components
+that co-operate via messaging (North says they have a "hard shell but a soft
+centre"). The niches occupied by these components vary, but it seems that some at least are directly involved in placing trades, hence developers get direct feedback on their profitability. Developers build components quickly and try them out for short periods; only a small percentage survive the selection pressure and these may live for a long time, while the majority are deemed unfit and so go extinct.
+
+***Forward***
+
+Forward Internet Group is a company that runs a number of retail web sites,
+such as the UK's leading energy-tariff comparison service, uSwitch. Like DRW,
+they find that their business is changing very fast and they have evolved a
+development method that lets them try many approaches quickly and select for the best ones. Fred George
+[http://processpeoplepods.blogspot.co.uk/] describes their process as
+"Developer Anarchy" - see his talk
+[http://forwardtechnology.co.uk/videos/32447325] and slides
+[http://www.slideshare.net/fredgeorge/programmer-anarchy-chinese].
+
+The Developer Anarchy philosophy has many aspects, but what's relevant to us
+here is Forward's use of techniques that are very similar to those at DRW: an
+architecture made up of many small, short-lived applications, co-operating via
+a messaging layer; developers not only change these apps at will, they rewrite
+them multiple times to wring the best out of each. In one case George cites
+[slide 94], the energy calculation component was rewritten three times: once in Ruby, then twice in Clojure. He isn't explicit about it but we have to assume that there was selection pressure on the component occupying this niche, resulting in the rapid evolution of its morphology. 
+
+Forward's very positive financial results (at the time of this writing) seem to
+suggest that their fast-evolving strategy is working, at least in their rapidly changing domain.
+
+***Netflix***
+
+Netflix provide on-demand movies and other entertainment to millions of people, delivered mainly through a network of thousands of virtual machines running in Amazon data centres. This system is made up of many co-operating services, which we would call components; these components seem to be larger than those at DRW or Forward (for example, teams of developers write components at Netflix, while they are generally composed by single developers at the other two firms) and I'd expect their rate of change to be smaller as a result. I also don't know whether they have as wide a range of morphology as, say, Forward. However, Netflix apply selection pressure to their components with extreme vigour; as well as measuring customer and technical metrics, they run a special component called the "chaos monkey" that randomly kills servers [see http://techblog.netflix.com/2012/07/chaos-monkey-released-into-wild.html]. This flushes out many misconfigurations and other system administration problems, but also identifies resiliency features missing from their components and helps them refine or replace the less-robust components.
+
+**Where, When, and Why Now?**
+
+It is clearly very early days for SotF systems, so it is hard to say where (if anywhere) they might be better than current solutions. But I will hazard a few guesses here, and also speculate on why these systems might be emerging now rather than ten years since or hence.
+
+You might want an SotF system if most or all of the following statements apply to your situation:
+1. You have a highly skilled team that is comfortable with very rapid change and learns fast. Comfort with a variety of languages, design methods, and platforms is likely to be an important characteristic for each member of the team to have.
+2. The environment gives you frequent and unambiguous feedback. Ecommerce and financial trading are industries I happen to know about in which is this true. Payroll or billing systems, where external interaction may only happen weekly or monthly, are less likely to satisfy this criterion.
+3. Deployment can be cheap, standardised, and under control of the development team. Highly regulated industries where manual deployment checks are traditional or mandatory may at first appear to be poor environments for this kind of deployment, but there may be ways around this - for instance you could install a gatekeeper between the SotF system and its environment to ensure no risky or outrageous outputs reach the outside world (think of banks with their compliance and settlement systems).
+4. The problem that the system is to solve is wide open and many approaches have an equal a priori chance of working. 
+5. There are sufficient financial and political resources to support an experimental approach with plenty of failures along the road to success. This has to include support for some initial and continuing investment in the infrastructure that enables high rates of speciation and extinction (deployment tools, easily available cloud instances, and messaging systems being examples of what may be needed).
+
+Looking at these criteria suggests a couple of arguments about why this may be the natural time for SotF systems to emerge:
+
+* The rise of configuration tools and Netflix-style all-virtual architectures is helping us make frequent, standardised deployments the norm (criterion 3). These tools also reduce the cost of setting up infrastructure for an SotF system (criterion 5).
+* Software is "eating the world" [7] and we are regularly discovering industries with significant challenges that software can solve - and the best solutions for those industries are still unknown. "Big data" analysis and online education are two of many examples (criterion 4). In many cases, the new systems we are inventing in these industries will run in environments with huge transaction volumes and immediate or near-immediate commercial feedback - think Khan Academy or high-frequency trading (criterion 2).
+
+**The Future of SotF Systems: Problems and Prospects**
+
+Such a new idea as a "survival of the fittest" system must overcome many problems and challenges if it is to be widely adopted. Some that I have heard in discussing the idea initially:
+
+* Are there types of application where this approach won't work?
+* What about infrequent events like annual audits or quarterly reports? They
+may not be naturally exercised enough for the environment to provide meaningful feedback on related components.
+* Will extreme decomposition and rapid change lead to uncontrolled and emergent behaviour of the system? Are there environments in which that would be acceptable?
+* What about infrastructure and ops teams? Retrofitting to existing software?
+Organisational acceptance?
+
+I don't have good answers to any of these questions yet but am hopeful that
+the early experiments conducted by the teams cited above, and others who
+follow them, will help us shed light on these difficulties and possible
+solutions.
+
+In a few years, will designing for rapid evolution be as common a practise as
+continuous integration and deployment are now? Only time will tell. I have
+set up http://fittestsystems.com as a forum for discussion on these topics;
+please visit to see what has developed since the printing of this book, and
+add your own contributions and ideas! [7]
+
+
+[1] Often attributed to Faulkner, this phrase actually appears to be from an early 20th-century writing guide by Arthur Quiller-Couch. See [http://en.wikipedia.org/wiki/Arthur_Quiller-Couch].
+
+[2] Travelling from Java to Python with an intermediate stop at Jython (a JVM-based Python implementation) seems like it would be helpful - but actually it just begs the question. If CPython is your ultimate destination, how are you going to get there from Jython a few lines at a time? This is not at all a trivial question - see [http://www.jython.org/archive/21/docs/differences.html].
+
+[3] The phrase "software ecosystem" might also come to mind as a good description of a group of co-operating and competing pieces of software. But it is already in use to describe a different competitive landscape, one involving multiple software vendors looking to fill a single economic niche. See [http://en.wikipedia.org/wiki/Software_ecosystem].
+
+[4] "Microservices" is a common name for this decomposition into very small, communicating components - see, for example, [http://yobriefca.se/blog/2013/04/29/micro-service-architecture/]. A SotF system could be described as having a microservices architecture with additional features that permit rapid evolution.
+
+[5]  In biology, an organism's morphology is its form and structure. For instance, we could describe the author's morphology thus: he is a bipedal vertebrate with fine body hair and a complex central nervous system.
+
+[6] The inspiration for the "judge" is the design of computers on the US Space
+Shuttle, which "vote" throughout flight on results and actions; among other
+things, this helps protect against catastrophic failures due to bits flipped
+by cosmic ray strikes. The name "judge" is due to Antony Marcano. See [http://history.nasa.gov/sts1/pages/computer.html].
+
+[7] "Software is eating the world" is Marc Andreessen's phrase. See [http://online.wsj.com/news/articles/SB10001424053111903480904576512250915629460].
+
+[8] I'd like to acknowledge the contribution to the ideas in this essay of the
+participants at the 2012 and 2013 CITCON sessions on Continuous Rewriting (a precursor of the SotF notion presented here) - especially that of Peter Zsoldos; and those of many others, too many to name, whom I have buttonholed for feedback on continuous rewriting and SotF. Any errors or omissions are of course my own!
