@@ -54,6 +54,10 @@ def publish(host, port):
         sleep(1)
 
 host, port = argv[1], int(argv[2])
+if len(argv) >= 4:
+    config_file = argv[3]
+    resources['/' + config_file] = {'content_type': 'application/json',
+                                    'content': open(config_file).read()}
 pid = fork()
 if pid > 0:
     run_server(host, port)

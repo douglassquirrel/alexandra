@@ -1,0 +1,7 @@
+{
+"field_width": 400,
+"field_height": 400,
+"player_start_x": 30,
+"player_start_y": 30,
+"tick_seconds": 0.02
+}
