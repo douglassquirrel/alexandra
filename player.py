@@ -1,6 +1,8 @@
-from json import dumps, loads
+from json import dumps, load, loads
 from pika import BlockingConnection, ConnectionParameters
 from time import sleep
+from sys import exit
+from urllib2 import URLError, urlopen
 
 class Vector:
     def __init__(self, x, y):
@@ -31,38 +33,61 @@ class Rect:
     def move(self, v):
         return Rect(self.top_left.add(v), self.bottom_right.add(v))
 
-FIELD_RECT = Rect(Vector(0, 0), Vector(400, 400))
-START = Vector(30, 30)
-WIDTH = 50
-HEIGHT = 50
-TICK = 0.02
-deltas = {'left': Vector(-5, 0), 'right': Vector(5, 0),
-          'up': Vector(0, -5), 'down': Vector(0, 5)}
-
 def init():
+    channel = init_channel()
+    config = init_config(channel)
+    rect = Rect(config['start'],
+                config['start'].add(Vector(config['width'], config['height'])))
+    send_position(rect.top_left, channel)
+
+    return channel, rect, config
+
+def init_config(channel):
+    channel.queue_declare(queue='library_url')
+    sleep(1)
+    library_url = channel.basic_get(0, 'library_url', no_ack=True)[2]
+    if not library_url:
+        print "No library url published, cannot fetch config - exiting player"
+        exit(1)
+
+    config_url = library_url + '/config.json'
+    try:
+        config_file = urlopen(config_url)
+    except URLError:
+        print "No config file at %s - exiting player" % (config_url,)
+        exit(1)
+    config = load(config_file)
+
+    return {'field_rect': Rect(Vector(0, 0),
+                               Vector(config['field_width'],
+                                      config['field_height'])),
+            'start': Vector(config['player_start_x'], config['player_start_y']),
+            'width': 50,
+            'height': 50,
+            'tick': config['tick_seconds'],
+            'deltas': {'left': Vector(-5, 0), 'right': Vector(5, 0),
+                       'up': Vector(0, -5), 'down': Vector(0, 5)}}
+
+def init_channel():
     connection = BlockingConnection(ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.queue_declare(queue='position')
     channel.queue_declare(queue='input')
+    return channel
 
-    rect = Rect(START, START.add(Vector(WIDTH, HEIGHT)))
-    send_position(rect.top_left, channel)
-
-    return channel, rect
-
-def main_loop(channel, rect):
+def main_loop(channel, rect, config):
     while True:
         command = get_input(channel)
         if command:
             rect = do(command, rect)
-        sleep(TICK)
+        sleep(config['tick'])
 
 def do(command, rect):
-    delta = deltas.get(command)
+    delta = config['deltas'].get(command)
     if not delta:
         return rect
     new_rect = rect.move(delta)
-    if new_rect.in_rect(FIELD_RECT):
+    if new_rect.in_rect(config['field_rect']):
         send_position(new_rect.top_left, channel)
         return new_rect
     else:
@@ -81,5 +106,5 @@ def get_input(channel):
     else:
         return None
 
-channel, rect = init()
-main_loop(channel, rect)
+channel, rect, config = init()
+main_loop(channel, rect, config)
