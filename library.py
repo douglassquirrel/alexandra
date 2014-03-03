@@ -1,44 +1,65 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from json import dumps
 from os import fork
 from pika import BlockingConnection, ConnectionParameters
 from sys import argv
 from time import sleep
 
-resources = {}
+class Resources:
+    def __init__(self):
+        self.resources = {}
+
+    def add(self, path, content_type, content):
+        self.resources[path] = {'content_type': content_type,
+                                'content': content}
+    def get(self, path):
+        if path == '/':
+            return {'content_type': 'application/json',
+                    'content': dumps(self.resources.keys())}
+        else:
+            try:
+                return self.resources[path]
+            except KeyError:
+                return None
+
+class HTTPServerWithResources(HTTPServer):
+    def __init__(self, server_address, RequestHandlerClass, resources):
+        HTTPServer.__init__(self, server_address, RequestHandlerClass)
+        self.resources = resources
 
 class LibraryHandler(BaseHTTPRequestHandler):
     def do_PUT(self):
-        try:
-            content_type = self.headers['Content-Type']
-            length = int(self.headers['Content-Length'])
-            content = self.rfile.read(length)
-            resources[self.path] = {'content_type': content_type,
-                                    'content': content}
-        except KeyError:
+        if not self._check_put_headers(self.headers):
             self.send_error(400)
             return
+
+        content_type = self.headers['Content-Type']
+        length = int(self.headers['Content-Length'])
+        content = self.rfile.read(length)
+        self.server.resources.add(self.path, content_type, content)
 
         self.send_response(200)
         self.end_headers()
 
     def do_GET(self):
-        try:
-            resource = resources[self.path]
-            content_type = resource['content_type']
-            content = resource['content']
-            length = len(content)
-        except KeyError:
+        resource = self.server.resources.get(self.path)
+        if resource is None:
             self.send_error(404)
             return
 
         self.send_response(200)
-        self.send_header('Content-Type', content_type)
-        self.send_header('Content-Length', length)
+        self.send_header('Content-Type', resource['content_type'])
+        self.send_header('Content-Length', len(resource['content']))
         self.end_headers()
-        self.wfile.write(content)
+        self.wfile.write(resource['content'])
 
-def run_server(host, port):
-    server = HTTPServer((host, port), LibraryHandler)
+    def _check_put_headers(self, headers):
+        print headers.keys()
+        required_put_headers = ['content-type', 'content-length']
+        return set(required_put_headers).issubset(set(headers.keys()))
+
+def run_server(host, port, resources):
+    server = HTTPServerWithResources((host, port), LibraryHandler, resources)
     server.serve_forever()
 
 def publish(host, port):
@@ -53,13 +74,15 @@ def publish(host, port):
                               body=url)
         sleep(1)
 
+resources = Resources()
 host, port = argv[1], int(argv[2])
 if len(argv) >= 4:
     config_file = argv[3]
-    resources['/' + config_file] = {'content_type': 'application/json',
-                                    'content': open(config_file).read()}
+    resources.add(path='/' + config_file,
+                  content_type='application/json',
+                  content=open(config_file).read())
 pid = fork()
 if pid > 0:
-    run_server(host, port)
+    run_server(host, port, resources)
 else:
     publish(host, port)
