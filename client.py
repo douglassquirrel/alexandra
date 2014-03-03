@@ -1,13 +1,14 @@
 from json import dumps, load, loads
 from pika import BlockingConnection, ConnectionParameters
 from pygame import display, draw, event, init, key, quit, Rect
+from pygame.image import load as imageload
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
+from StringIO import StringIO
 from sys import exit
 from time import sleep
 from urllib2 import URLError, urlopen
 
 BLACK = (0, 0, 0)
-YELLOW = (255, 255, 0)
 
 def init_channel():
     connection = BlockingConnection(ConnectionParameters('localhost'))
@@ -21,24 +22,24 @@ def init_config(channel):
     sleep(1)
     library_url = channel.basic_get(0, 'library_url', no_ack=True)[2]
     if not library_url:
-        print "No library url published, cannot fetch config - exiting client"
+        print "No library url published, cannot fetch config"
         exit(1)
 
     config_url = library_url + '/config.json'
     try:
         config_file = urlopen(config_url)
     except URLError:
-        print "No config file at %s - exiting player" % (config_url,)
+        print "No config file at %s" % (config_url,)
         exit(1)
     config = load(config_file)
     return {'field_width': config['field_width'],
             'field_height': config['field_height'],
+            'library_url': library_url,
             'tick': config['tick_seconds']}
 
-def init_window(config):
+def init_window(field_width, field_height):
     init()
-    field_size = (config['field_width'], config['field_height'])
-    window = display.set_mode(field_size, 0, 32)
+    window = display.set_mode((field_width, field_height), 0)
     display.set_caption('Alexandra')
     return window
 
@@ -55,37 +56,39 @@ def check_quit():
             quit()
             exit()
 
-commands = {K_DOWN: 'down', K_LEFT: 'left', K_RIGHT: 'right', K_UP: 'up'}
-def get_input():
-    input = []
+input_keys = {K_DOWN: 'down', K_LEFT: 'left', K_RIGHT: 'right', K_UP: 'up'}
+def get_command():
     keyState = key.get_pressed()
-    for command in commands.keys():
-        if keyState[command]:
-            input.append(commands[command])
-    return input
+    for k in input_keys.keys():
+        if keyState[k]:
+            return input_keys[k]
+    return None
 
-def send_input(input, channel):
+def send_command(command, channel):
     channel.basic_publish(exchange='',
                           routing_key='input',
-                          body=dumps(input))
+                          body=dumps(command))
 
-def do_position_update(window, new_position):
-    x, y = new_position
+def do_position_update(window, new_position, library_url):
+    image_url = library_url + '/player/player_image.png'
+    image_data = StringIO(urlopen(image_url).read())
+    image = imageload(image_data)
     window.fill(BLACK)
-    draw.rect(window, YELLOW, Rect(x, y, 50, 50))
-    display.update()
+    window.blit(image, new_position)
+    display.flip()
 
-def main_loop(window, channel, config):
+def main_loop(window, channel, library_url, tick):
     while True:
         new_position = get_position_update(channel)
         if new_position:
-            do_position_update(window, new_position)
-        input_list = get_input()
-        for input in input_list:
-            send_input(input, channel)
+            do_position_update(window, new_position, library_url)
+        command = get_command()
+        if command is not None:
+            send_command(command, channel)
         check_quit()
-        sleep(config['tick'])
+        sleep(tick)
 
 channel = init_channel()
 config = init_config(channel)
-main_loop(init_window(config), channel, config)
+window = init_window(config['field_width'], config['field_height'])
+main_loop(window, channel, config['library_url'], config['tick'])

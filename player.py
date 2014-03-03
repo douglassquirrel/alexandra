@@ -2,7 +2,9 @@ from json import dumps, load, loads
 from pika import BlockingConnection, ConnectionParameters
 from time import sleep
 from sys import exit
-from urllib2 import URLError, urlopen
+from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
+
+IMAGE_FILE = 'player_image.png'
 
 class Vector:
     def __init__(self, x, y):
@@ -36,6 +38,7 @@ class Rect:
 def init():
     channel = init_channel()
     config = init_config(channel)
+    publish_image(config['library_url'])
     rect = Rect(config['start'],
                 config['start'].add(Vector(config['width'], config['height'])))
     send_position(rect.top_left, channel)
@@ -64,9 +67,18 @@ def init_config(channel):
             'start': Vector(config['player_start_x'], config['player_start_y']),
             'width': 50,
             'height': 50,
+            'library_url': library_url,
             'tick': config['tick_seconds'],
             'deltas': {'left': Vector(-5, 0), 'right': Vector(5, 0),
                        'up': Vector(0, -5), 'down': Vector(0, 5)}}
+
+def publish_image(library_url):
+    image_data = open(IMAGE_FILE).read()
+    opener = build_opener(HTTPHandler)
+    request = Request(library_url + '/player/player_image.png', image_data)
+    request.add_header('Content-Type', 'image/png')
+    request.get_method = lambda: 'PUT'
+    opener.open(request)
 
 def init_channel():
     connection = BlockingConnection(ConnectionParameters('localhost'))
@@ -75,15 +87,15 @@ def init_channel():
     channel.queue_declare(queue='input')
     return channel
 
-def main_loop(channel, rect, config):
+def main_loop(channel, rect, deltas, tick):
     while True:
         command = get_input(channel)
         if command:
-            rect = do(command, rect)
-        sleep(config['tick'])
+            rect = do(command, rect, deltas)
+        sleep(tick)
 
-def do(command, rect):
-    delta = config['deltas'].get(command)
+def do(command, rect, deltas):
+    delta = deltas.get(command)
     if not delta:
         return rect
     new_rect = rect.move(delta)
@@ -107,4 +119,4 @@ def get_input(channel):
         return None
 
 channel, rect, config = init()
-main_loop(channel, rect, config)
+main_loop(channel, rect, config['deltas'], config['tick'])

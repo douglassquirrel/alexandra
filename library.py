@@ -53,8 +53,10 @@ class LibraryHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(resource['content'])
 
+    def log_message(self, format, *args):
+        pass
+
     def _check_put_headers(self, headers):
-        print headers.keys()
         required_put_headers = ['content-type', 'content-length']
         return set(required_put_headers).issubset(set(headers.keys()))
 
