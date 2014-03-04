@@ -1,5 +1,5 @@
 from json import dumps, load, loads
-from pika import BlockingConnection, ConnectionParameters
+from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
 from pygame import display, draw, event, init, key, quit, Rect
 from pygame.image import load as imageload
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
@@ -10,20 +10,14 @@ from urllib2 import URLError, urlopen
 
 BLACK = (0, 0, 0)
 
-def init_channel():
-    connection = BlockingConnection(ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue='position')
-    channel.queue_declare(queue='input')
-    return channel
-
 def init_config(channel):
-    channel.queue_declare(queue='library_url')
+    queue = subscribe(channel, 'library_url')
     sleep(1)
-    library_url = channel.basic_get(0, 'library_url', no_ack=True)[2]
+    library_url = get_message(channel, queue)
     if not library_url:
-        print "No library url published, cannot fetch config"
+        print "No library url published, cannot fetch config - exiting player"
         exit(1)
+    unsubscribe(channel, queue, 'library_url')
 
     config_url = library_url + '/config.json'
     try:
@@ -43,8 +37,8 @@ def init_window(field_width, field_height):
     display.set_caption('Alexandra')
     return window
 
-def get_position_update(channel):
-    message = channel.basic_get(0, 'position', no_ack=True)[2]
+def get_position_update(channel, position_queue):
+    message = get_message(channel, position_queue)
     if message:
         return loads(message)[0:2]
     else:
@@ -65,9 +59,7 @@ def get_command():
     return None
 
 def send_command(command, channel):
-    channel.basic_publish(exchange='',
-                          routing_key='input',
-                          body=dumps(command))
+    publish(channel, 'input', dumps(command))
 
 def do_position_update(window, new_position, library_url):
     image_url = library_url + '/player/player_image.png'
@@ -77,9 +69,9 @@ def do_position_update(window, new_position, library_url):
     window.blit(image, new_position)
     display.flip()
 
-def main_loop(window, channel, library_url, tick):
+def main_loop(window, channel, position_queue, library_url, tick):
     while True:
-        new_position = get_position_update(channel)
+        new_position = get_position_update(channel, position_queue)
         if new_position:
             do_position_update(window, new_position, library_url)
         command = get_command()
@@ -88,7 +80,9 @@ def main_loop(window, channel, library_url, tick):
         check_quit()
         sleep(tick)
 
-channel = init_channel()
+channel = create_channel()
 config = init_config(channel)
+position_queue = subscribe(channel, 'position')
 window = init_window(config['field_width'], config['field_height'])
-main_loop(window, channel, config['library_url'], config['tick'])
+main_loop(window, channel, position_queue,
+          config['library_url'], config['tick'])

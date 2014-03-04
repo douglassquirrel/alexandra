@@ -1,5 +1,5 @@
 from json import dumps, load, loads
-from pika import BlockingConnection, ConnectionParameters
+from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
 from time import sleep
 from sys import exit
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
@@ -36,22 +36,24 @@ class Rect:
         return Rect(self.top_left.add(v), self.bottom_right.add(v))
 
 def init():
-    channel = init_channel()
+    channel = create_channel()
     config = init_config(channel)
     publish_image(config['library_url'])
     rect = Rect(config['start'],
                 config['start'].add(Vector(config['width'], config['height'])))
     send_position(rect.top_left, channel)
+    input_queue = subscribe(channel, 'input')
 
-    return channel, rect, config
+    return channel, input_queue, rect, config
 
 def init_config(channel):
-    channel.queue_declare(queue='library_url')
+    queue = subscribe(channel, 'library_url')
     sleep(1)
-    library_url = channel.basic_get(0, 'library_url', no_ack=True)[2]
+    library_url = get_message(channel, queue)
     if not library_url:
         print "No library url published, cannot fetch config - exiting player"
         exit(1)
+    unsubscribe(channel, queue, 'library_url')
 
     config_url = library_url + '/config.json'
     try:
@@ -80,16 +82,9 @@ def publish_image(library_url):
     request.get_method = lambda: 'PUT'
     opener.open(request)
 
-def init_channel():
-    connection = BlockingConnection(ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue='position')
-    channel.queue_declare(queue='input')
-    return channel
-
-def main_loop(channel, rect, deltas, tick):
+def main_loop(channel, input_queue, rect, deltas, tick):
     while True:
-        command = get_input(channel)
+        command = get_input(channel, input_queue)
         if command:
             rect = do(command, rect, deltas)
         sleep(tick)
@@ -107,16 +102,14 @@ def do(command, rect, deltas):
 
 def send_position(position, channel):
     pair = position.to_pair()
-    channel.basic_publish(exchange='',
-                          routing_key='position',
-                          body=dumps(pair))
+    publish(channel, 'position', dumps(pair))
 
-def get_input(channel):
-    message = channel.basic_get(0, 'input', no_ack=True)[2]
+def get_input(channel, input_queue):
+    message = get_message(channel, input_queue)
     if message:
         return loads(message)
     else:
         return None
 
-channel, rect, config = init()
-main_loop(channel, rect, config['deltas'], config['tick'])
+channel, input_queue, rect, config = init()
+main_loop(channel, input_queue, rect, config['deltas'], config['tick'])

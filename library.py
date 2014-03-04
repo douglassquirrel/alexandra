@@ -1,7 +1,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import dumps
 from os import fork
-from pika import BlockingConnection, ConnectionParameters
+from pubsub import create_channel, publish
 from sys import argv
 from time import sleep
 
@@ -64,16 +64,12 @@ def run_server(host, port, resources):
     server = HTTPServerWithResources((host, port), LibraryHandler, resources)
     server.serve_forever()
 
-def publish(host, port):
-    connection = BlockingConnection(ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue='library_url')
+def publish_url(host, port):
+    channel = create_channel()
     url = 'http://%s:%d' % (host, port)
 
     while True:
-        channel.basic_publish(exchange='',
-                              routing_key='library_url',
-                              body=url)
+        publish(channel=channel, label='library_url', message=url)
         sleep(1)
 
 resources = Resources()
@@ -87,4 +83,4 @@ pid = fork()
 if pid > 0:
     run_server(host, port, resources)
 else:
-    publish(host, port)
+    publish_url(host, port)

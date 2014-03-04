@@ -12,7 +12,6 @@ def publish(channel, label, message):
     channel.basic_publish(exchange=EXCHANGE_NAME,
                           routing_key=label,
                           body=message)
-    print 'Sent %s with label %s' % (message, label)
 
 def subscribe(channel, label):
     result = channel.queue_declare(exclusive=True)
