@@ -15,7 +15,7 @@ def init_config(channel):
     sleep(1)
     library_url = get_message(channel, queue)
     if not library_url:
-        print "No library url published, cannot fetch config - exiting player"
+        print "No library url published, cannot fetch config"
         exit(1)
     unsubscribe(channel, queue, 'library_url')
 
@@ -59,7 +59,7 @@ def get_command():
     return None
 
 def send_command(command, channel):
-    publish(channel, 'input', dumps(command))
+    publish(channel, 'commands.player', dumps(command))
 
 def do_position_update(window, new_position, library_url):
     image_url = library_url + '/player/player_image.png'
@@ -82,7 +82,7 @@ def main_loop(window, channel, position_queue, library_url, tick):
 
 channel = create_channel()
 config = init_config(channel)
-position_queue = subscribe(channel, 'position')
+position_queue = subscribe(channel, 'position.player')
 window = init_window(config['field_width'], config['field_height'])
 main_loop(window, channel, position_queue,
           config['library_url'], config['tick'])

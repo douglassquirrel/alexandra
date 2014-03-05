@@ -2,9 +2,7 @@ from json import dumps, load, loads
 from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
 from time import sleep
 from sys import exit
-from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
-
-IMAGE_FILE = 'player_image.png'
+from urllib2 import URLError, urlopen
 
 class Vector:
     def __init__(self, x, y):
@@ -38,13 +36,9 @@ class Rect:
 def init():
     channel = create_channel()
     config = init_config(channel)
-    publish_image(config['library_url'])
-    rect = Rect(config['start'],
-                config['start'].add(Vector(config['width'], config['height'])))
-    send_position(rect.top_left, channel)
-    commands_queue = subscribe(channel, 'commands.player')
+    movement_queue = subscribe(channel, 'movement.player')
 
-    return channel, commands_queue, rect, config
+    return channel, movement_queue, config
 
 def init_config(channel):
     queue = subscribe(channel, 'library_url')
@@ -63,47 +57,41 @@ def init_config(channel):
         exit(1)
     config = load(config_file)
 
-    return {'start': Vector(config['player_start_x'], config['player_start_y']),
+    return {'field_rect': Rect(Vector(0, 0),
+                               Vector(config['field_width'],
+                                      config['field_height'])),
             'width': 50,
             'height': 50,
             'library_url': library_url,
-            'tick': config['tick_seconds'],
-            'deltas': {'left': Vector(-5, 0), 'right': Vector(5, 0),
-                       'up': Vector(0, -5), 'down': Vector(0, 5)}}
+            'tick': config['tick_seconds']}
 
-def publish_image(library_url):
-    image_data = open(IMAGE_FILE).read()
-    opener = build_opener(HTTPHandler)
-    request = Request(library_url + '/player/player_image.png', image_data)
-    request.add_header('Content-Type', 'image/png')
-    request.get_method = lambda: 'PUT'
-    opener.open(request)
-
-def main_loop(channel, commands_queue, rect, deltas, tick):
+def main_loop(channel, movement_queue, field_rect, width, height, tick):
     while True:
-        command = get_input(channel, commands_queue)
-        if command:
-            rect = do(command, rect, deltas)
+        new_position = get_input(channel, movement_queue)
+        if new_position:
+            check(new_position, field_rect, width, height)
         sleep(tick)
 
-def do(command, rect, deltas):
-    delta = deltas.get(command)
-    if not delta:
-        return rect
-    new_rect = rect.move(delta)
-    send_position(new_rect.top_left, channel)
-    return new_rect
+def check(new_position, field_rect, width, height):
+    if is_legal(new_position[0], new_position[1], field_rect, width, height):
+        publish(channel, 'position.player', dumps(new_position))
+    else:
+        message = {'new_position': new_position}
+        publish(channel, 'rejected.movement.player', dumps(message))
 
-def send_position(position, channel):
-    pair = position.to_pair()
-    publish(channel, 'movement.player', dumps(pair))
+def is_legal(new_x, new_y, field_rect, width, height):
+    top_left = Vector(new_x, new_y)
+    bottom_right = top_left.add(Vector(width, height))
+    new_rect = Rect(top_left, bottom_right)
+    return new_rect.in_rect(field_rect)
 
-def get_input(channel, commands_queue):
-    message = get_message(channel, commands_queue)
+def get_input(channel, movement_queue):
+    message = get_message(channel, movement_queue)
     if message:
         return loads(message)
     else:
         return None
 
-channel, commands_queue, rect, config = init()
-main_loop(channel, commands_queue, rect, config['deltas'], config['tick'])
+channel, movement_queue, config = init()
+main_loop(channel, movement_queue, config['field_rect'],
+          config['width'], config['height'], config['tick'])
