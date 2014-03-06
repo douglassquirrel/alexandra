@@ -1,3 +1,4 @@
+from random import choice as random_choice
 from sys import stdout
 
 def make_maze(width, height):
@@ -12,14 +13,13 @@ def make_maze(width, height):
         for neighbour in neighbours:
             if is_intact(neighbour, walls):
                 intact_neighbours.append(neighbour)
-        print intact_neighbours
         if len(intact_neighbours) > 0:
-            next_cell = choose_random(intact_neighbours)
+            next_cell = random_choice(intact_neighbours)
             wall = wall_between(current_cell, next_cell)
             walls.remove(wall)
             stack.append(current_cell)
             current_cell = next_cell
-            visited_cells += 1
+            cells_visited += 1
         else:
             current_cell = stack.pop()
     print_maze(width, height, walls)
@@ -44,11 +44,15 @@ def is_intact(cell, walls):
        and (x,y+1,x+1,y+1) in walls \
        and (x+1,y,x+1,y+1) in walls
 
-def choose_random(L):
-    pass
-
 def wall_between(cell_1, cell_2):
-    pass
+    x1, y1 = cell_1[0], cell_1[1]
+    x2, y2 = cell_2[0], cell_2[1]
+    if x1 > x2 or y1 > y2:
+        return wall_between(cell_2, cell_1)
+    if x1 == x2:
+        return (x2,y2,x2+1,y2)
+    else:
+        return (x2,y2,x2,y2+1)
 
 def all_walls(width, height):
     walls = []
@@ -73,4 +77,4 @@ def print_maze(width, height, walls):
                 stdout.write(' ')
         stdout.write('\n')
 
-make_maze(5, 5)
+make_maze(10, 8)
