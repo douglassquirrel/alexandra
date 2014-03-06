@@ -13,9 +13,9 @@ def init():
     position = (config['start_x'], config['start_y'])
     send_movement(position, position, channel)
     commands_queue = subscribe(channel, 'commands.player')
-    position_queue = subscribe(channel, 'position.player')
+    world_queue = subscribe(channel, 'world')
 
-    return channel, commands_queue, position_queue, position, config
+    return channel, commands_queue, world_queue, position, config
 
 def init_config(channel):
     queue = subscribe(channel, 'library_url')
@@ -51,19 +51,19 @@ def publish_image(library_url):
     request.get_method = lambda: 'PUT'
     opener.open(request)
 
-def main_loop(channel, commands_queue, position_queue, position, deltas, tick):
+def main_loop(channel, commands_queue, world_queue, position, deltas, tick):
     while True:
         command = get_input(channel, commands_queue)
         if command is not None:
             do(command, position, deltas)
-            position = get_position(channel, position_queue, position, tick)
+            position = get_position(channel, world_queue, position, tick)
         sleep(tick)
 
-def get_position(channel, position_queue, previous_position, tick):
+def get_position(channel, world_queue, previous_position, tick):
     for i in range(0, 6):
-        position = get_message(channel, position_queue)
-        if position is not None:
-            return loads(position)
+        world = get_message(channel, world_queue)
+        if world is not None:
+            return loads(world)['player']
         sleep(tick/2)
     return previous_position
 
@@ -75,7 +75,7 @@ def do(command, position, deltas):
     send_movement(position, new_position, channel)
 
 def send_movement(from_position, to_position, channel):
-    movement = {'from': from_position, 'to': to_position}
+    movement = {'entity': 'player', 'from': from_position, 'to': to_position}
     publish(channel, 'movement.player', dumps(movement))
 
 def get_input(channel, commands_queue):
@@ -85,6 +85,6 @@ def get_input(channel, commands_queue):
     else:
         return None
 
-channel, commands_queue, position_queue, position, config = init()
-main_loop(channel, commands_queue, position_queue,
+channel, commands_queue, world_queue, position, config = init()
+main_loop(channel, commands_queue, world_queue,
           position, config['deltas'], config['tick'])

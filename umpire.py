@@ -36,7 +36,7 @@ class Rect:
 def init():
     channel = create_channel()
     config = init_config(channel)
-    movement_queue = subscribe(channel, 'movement.player')
+    movement_queue = subscribe(channel, 'movement.*')
 
     return channel, movement_queue, config
 
@@ -67,18 +67,22 @@ def init_config(channel):
 
 def main_loop(channel, movement_queue, field_rect, width, height, tick):
     while True:
-        movement = get_input(channel, movement_queue)
+        movement = get_movement(channel, movement_queue)
         if movement is not None:
             filter_movement(movement, field_rect, width, height)
         sleep(tick)
 
 def filter_movement(movement, field_rect, width, height):
+    entity = movement['entity']
     from_position, to_position = movement['from'], movement['to']
     if is_legal(to_position[0], to_position[1], field_rect, width, height):
         new_position = to_position
     else:
         new_position = from_position
-    publish(channel, 'position.player', dumps(new_position))
+    approved_movement = {'entity': entity, 'from': from_position,
+                         'to': new_position}
+    publish(channel, 'decision.movement.' + entity,
+            dumps(approved_movement))
 
 def is_legal(new_x, new_y, field_rect, width, height):
     top_left = Vector(new_x, new_y)
@@ -86,7 +90,7 @@ def is_legal(new_x, new_y, field_rect, width, height):
     new_rect = Rect(top_left, bottom_right)
     return new_rect.in_rect(field_rect)
 
-def get_input(channel, movement_queue):
+def get_movement(channel, movement_queue):
     message = get_message(channel, movement_queue)
     if message:
         return loads(message)

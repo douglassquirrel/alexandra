@@ -37,10 +37,10 @@ def init_window(field_width, field_height):
     display.set_caption('Alexandra')
     return window
 
-def get_position_update(channel, position_queue):
-    message = get_message(channel, position_queue)
-    if message:
-        return loads(message)[0:2]
+def get_world_update(channel, world_queue):
+    message = get_message(channel, world_queue)
+    if message is not None:
+        return loads(message)
     else:
         return None
 
@@ -61,7 +61,8 @@ def get_command():
 def send_command(command, channel):
     publish(channel, 'commands.player', dumps(command))
 
-def do_position_update(window, new_position, library_url):
+def do_world_update(window, world, library_url):
+    new_position = world['player']
     image_url = library_url + '/player/player_image.png'
     image_data = StringIO(urlopen(image_url).read())
     image = imageload(image_data)
@@ -69,11 +70,11 @@ def do_position_update(window, new_position, library_url):
     window.blit(image, new_position)
     display.flip()
 
-def main_loop(window, channel, position_queue, library_url, tick):
+def main_loop(window, channel, world_queue, library_url, tick):
     while True:
-        new_position = get_position_update(channel, position_queue)
-        if new_position:
-            do_position_update(window, new_position, library_url)
+        world = get_world_update(channel, world_queue)
+        if world is not None:
+            do_world_update(window, world, library_url)
         command = get_command()
         if command is not None:
             send_command(command, channel)
@@ -82,7 +83,7 @@ def main_loop(window, channel, position_queue, library_url, tick):
 
 channel = create_channel()
 config = init_config(channel)
-position_queue = subscribe(channel, 'position.player')
+world_queue = subscribe(channel, 'world')
 window = init_window(config['field_width'], config['field_height'])
-main_loop(window, channel, position_queue,
+main_loop(window, channel, world_queue,
           config['library_url'], config['tick'])
