@@ -1,5 +1,6 @@
 from json import dumps, load, loads
-from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
+from pubsub import create_channel, publish, subscribe, unsubscribe, \
+                   get_message, get_message_block
 from time import sleep
 from sys import exit
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
@@ -39,7 +40,6 @@ def init_config(channel):
             'width': 50,
             'height': 50,
             'library_url': library_url,
-            'tick': config['tick_seconds'],
             'deltas': {'left': (-5, 0), 'right': (5, 0),
                        'up': (0, -5), 'down': (0, 5)}}
 
@@ -51,21 +51,15 @@ def publish_image(library_url):
     request.get_method = lambda: 'PUT'
     opener.open(request)
 
-def main_loop(channel, commands_queue, world_queue, position, deltas, tick):
+def main_loop(channel, commands_queue, world_queue, position, deltas):
     while True:
+        world = loads(get_message_block(channel, world_queue))
+        if 'player' not in world:
+            continue
+        position = world['player']
         command = get_input(channel, commands_queue)
         if command is not None:
             do(command, position, deltas)
-            position = get_position(channel, world_queue, position, tick)
-        sleep(tick)
-
-def get_position(channel, world_queue, previous_position, tick):
-    for i in range(0, 6):
-        world = get_message(channel, world_queue)
-        if world is not None:
-            return loads(world)['player']
-        sleep(tick/2)
-    return previous_position
 
 def do(command, position, deltas):
     delta = deltas.get(command)
@@ -87,4 +81,4 @@ def get_input(channel, commands_queue):
 
 channel, commands_queue, world_queue, position, config = init()
 main_loop(channel, commands_queue, world_queue,
-          position, config['deltas'], config['tick'])
+          position, config['deltas'])

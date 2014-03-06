@@ -1,5 +1,6 @@
 from json import dumps, load, loads
-from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
+from pubsub import create_channel, publish, subscribe, unsubscribe, \
+                   get_message, get_message_block
 from pygame import display, draw, event, init, key, quit, Rect
 from pygame.image import load as imageload
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
@@ -28,21 +29,13 @@ def init_config(channel):
     config = load(config_file)
     return {'field_width': config['field_width'],
             'field_height': config['field_height'],
-            'library_url': library_url,
-            'tick': config['tick_seconds']}
+            'library_url': library_url}
 
 def init_window(field_width, field_height):
     init()
     window = display.set_mode((field_width, field_height), 0)
     display.set_caption('Alexandra')
     return window
-
-def get_world_update(channel, world_queue):
-    message = get_message(channel, world_queue)
-    if message is not None:
-        return loads(message)
-    else:
-        return None
 
 def check_quit():
     for e in event.get():
@@ -62,6 +55,8 @@ def send_command(command, channel):
     publish(channel, 'commands.player', dumps(command))
 
 def do_world_update(window, world, library_url):
+    if 'player' not in world:
+        return
     new_position = world['player']
     image_url = library_url + '/player/player_image.png'
     image_data = StringIO(urlopen(image_url).read())
@@ -70,20 +65,17 @@ def do_world_update(window, world, library_url):
     window.blit(image, new_position)
     display.flip()
 
-def main_loop(window, channel, world_queue, library_url, tick):
+def main_loop(window, channel, world_queue, library_url):
     while True:
-        world = get_world_update(channel, world_queue)
-        if world is not None:
-            do_world_update(window, world, library_url)
+        world = loads(get_message_block(channel, world_queue))
+        do_world_update(window, world, library_url)
         command = get_command()
         if command is not None:
             send_command(command, channel)
         check_quit()
-        sleep(tick)
 
 channel = create_channel()
 config = init_config(channel)
 world_queue = subscribe(channel, 'world')
 window = init_window(config['field_width'], config['field_height'])
-main_loop(window, channel, world_queue,
-          config['library_url'], config['tick'])
+main_loop(window, channel, world_queue, config['library_url'])

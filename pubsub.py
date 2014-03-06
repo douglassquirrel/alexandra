@@ -26,3 +26,18 @@ def unsubscribe(channel, queue, label):
 
 def get_message(channel, queue):
     return channel.basic_get(0, queue=queue, no_ack=True)[2]
+
+def get_all_messages(channel, queue):
+    messages = []
+    while True:
+        message = get_message(channel, queue)
+        if message is None:
+            return messages
+        else:
+            messages.append(message)
+
+def get_message_block(channel, queue):
+    while True:
+        message = get_message(channel, queue)
+        if message is not None:
+            return message

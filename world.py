@@ -1,5 +1,6 @@
 from json import dumps, load, loads
-from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
+from pubsub import create_channel, publish, subscribe, unsubscribe, \
+                   get_message, get_all_messages
 from time import sleep
 from sys import exit
 from urllib2 import URLError, urlopen
@@ -31,24 +32,17 @@ def init_config(channel):
     return {'tick': config['tick_seconds']}
 
 def main_loop(channel, movement_queue, tick):
-    world = {}
-    tick = 0
+    world = {'tick': 0}
     while True:
-        # increment and include tick
-        # check for all movements
-        movement = get_movement(channel, movement_queue)
-        if movement is not None:
+        world['tick'] += 1
+        for movement in get_movements(channel, movement_queue):
             entity, position = movement['entity'], movement['to']
             world[entity] = position
         publish(channel, 'world', dumps(world))
         sleep(tick)
 
-def get_movement(channel, movement_queue):
-    message = get_message(channel, movement_queue)
-    if message is not None:
-        return loads(message)
-    else:
-        return None
+def get_movements(channel, movement_queue):
+    return map(loads, get_all_messages(channel, movement_queue))
 
 channel, movement_queue, config = init()
 main_loop(channel, movement_queue, config['tick'])
