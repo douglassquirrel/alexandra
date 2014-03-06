@@ -1,3 +1,6 @@
+# Depth-first maze generation from
+# http://www.mazeworks.com/mazegen/mazetut/index.htm
+
 from random import choice as random_choice
 from sys import stdout
 
