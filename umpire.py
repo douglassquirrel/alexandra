@@ -67,17 +67,18 @@ def init_config(channel):
 
 def main_loop(channel, movement_queue, field_rect, width, height, tick):
     while True:
-        new_position = get_input(channel, movement_queue)
-        if new_position:
-            check(new_position, field_rect, width, height)
+        movement = get_input(channel, movement_queue)
+        if movement is not None:
+            filter_movement(movement, field_rect, width, height)
         sleep(tick)
 
-def check(new_position, field_rect, width, height):
-    if is_legal(new_position[0], new_position[1], field_rect, width, height):
-        publish(channel, 'position.player', dumps(new_position))
+def filter_movement(movement, field_rect, width, height):
+    from_position, to_position = movement['from'], movement['to']
+    if is_legal(to_position[0], to_position[1], field_rect, width, height):
+        new_position = to_position
     else:
-        message = {'new_position': new_position}
-        publish(channel, 'rejected.movement.player', dumps(message))
+        new_position = from_position
+    publish(channel, 'position.player', dumps(new_position))
 
 def is_legal(new_x, new_y, field_rect, width, height):
     top_left = Vector(new_x, new_y)
