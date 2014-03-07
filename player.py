@@ -56,7 +56,7 @@ def main_loop(channel, commands_queue, world_queue, position, deltas):
         world = loads(get_message_block(channel, world_queue))
         if 'player' not in world:
             continue
-        position = world['player']
+        position = world['player'][0]
         command = get_input(channel, commands_queue)
         if command is not None:
             do(command, position, deltas)
@@ -69,7 +69,8 @@ def do(command, position, deltas):
     send_movement(position, new_position, channel)
 
 def send_movement(from_position, to_position, channel):
-    movement = {'entity': 'player', 'from': from_position, 'to': to_position}
+    movement = {'entity': 'player', 'from': from_position, 'to': to_position,
+                'from_rotation': 0, 'to_rotation': 0}
     publish(channel, 'movement.player', dumps(movement))
 
 def get_input(channel, commands_queue):

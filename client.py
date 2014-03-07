@@ -4,6 +4,7 @@ from pubsub import create_channel, publish, subscribe, unsubscribe, \
 from pygame import display, draw, event, init, key, quit, Rect
 from pygame.image import load as imageload
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
+from pygame.transform import rotate
 from StringIO import StringIO
 from sys import exit
 from time import sleep
@@ -55,15 +56,40 @@ def send_command(command, channel):
     publish(channel, 'commands.player', dumps(command))
 
 def do_world_update(window, world, library_url):
+    window.fill(BLACK)
+    do_player_update(window, world, library_url)
+    do_wall_update(window, world, library_url)
+    display.flip()
+
+def do_player_update(window, world, library_url):
     if 'player' not in world:
         return
-    new_position = world['player']
     image_url = library_url + '/player/player_image.png'
     image_data = StringIO(urlopen(image_url).read())
     image = imageload(image_data)
+
+    new_position = world['player'][0]
     window.fill(BLACK)
     window.blit(image, new_position)
     display.flip()
+
+def do_wall_update(window, world, library_url):
+    if 'wall_0' not in world:
+        return
+
+    image_url = library_url + '/wall/wall.png'
+    image_data = StringIO(urlopen(image_url).read())
+    image = imageload(image_data)
+
+    i = 0
+    wall_name = 'wall_%d' % (i,)
+    while wall_name in world:
+        position = world[wall_name][0]
+        rotation = world[wall_name][1]
+        rotated_image = rotate(image, rotation)
+        window.blit(rotated_image, position)
+        i += 1
+        wall_name = 'wall_%d' % (i,)
 
 def main_loop(window, channel, world_queue, library_url):
     while True:

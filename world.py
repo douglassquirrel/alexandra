@@ -36,8 +36,10 @@ def main_loop(channel, movement_queue, tick):
     while True:
         world['tick'] += 1
         for movement in get_movements(channel, movement_queue):
-            entity, position = movement['entity'], movement['to']
-            world[entity] = position
+            entity = movement['entity']
+            position = movement['to']
+            rotation = movement['to_rotation']
+            world[entity] = (position, rotation)
         publish(channel, 'world', dumps(world))
         sleep(tick)
 

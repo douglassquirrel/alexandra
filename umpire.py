@@ -75,12 +75,19 @@ def main_loop(channel, movement_queue, field_rect, width, height, tick):
 def filter_movement(movement, field_rect, width, height):
     entity = movement['entity']
     from_position, to_position = movement['from'], movement['to']
-    if is_legal(to_position[0], to_position[1], field_rect, width, height):
-        new_position = to_position
-    else:
+    from_rotation = movement['from_rotation']
+    to_rotation = movement['to_rotation']
+
+    if entity == 'player' and not is_legal(to_position[0], to_position[1],
+                                           field_rect, width, height):
         new_position = from_position
-    approved_movement = {'entity': entity, 'from': from_position,
-                         'to': new_position}
+    else:
+        new_position = to_position
+
+    approved_movement = {'entity': entity,
+                         'from': from_position, 'to': new_position,
+                         'from_rotation': from_rotation,
+                         'to_rotation': to_rotation}
     publish(channel, 'decision.movement.' + entity,
             dumps(approved_movement))
 
