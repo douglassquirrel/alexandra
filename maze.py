@@ -7,64 +7,62 @@ from sys import stdout
 def make_maze(width, height):
     walls = all_walls(width, height)
     stack = []
-    number_of_cells = width*height
     current_cell = (0, 0)
     cells_visited = 1
-    while cells_visited < number_of_cells:
-        neighbours = get_neighbours(current_cell, width, height)
-        intact_neighbours = []
-        for neighbour in neighbours:
-            if is_intact(neighbour, walls):
-                intact_neighbours.append(neighbour)
+    while cells_visited < width*height:
+        intact_neighbours = filter(lambda(x): is_intact(x, walls),
+                                   get_neighbours(current_cell, width, height))
         if len(intact_neighbours) > 0:
             next_cell = random_choice(intact_neighbours)
-            wall = wall_between(current_cell, next_cell)
-            walls.remove(wall)
+            walls.remove(wall_between(current_cell, next_cell))
             stack.append(current_cell)
             current_cell = next_cell
             cells_visited += 1
         else:
             current_cell = stack.pop()
-    print_maze(width, height, walls)
+    return walls
 
 def is_valid_cell(cell, width, height):
-    x, y = cell[0], cell[1]
-    return x>=0 and y>=0 and x<width and y<height
+    return cell[0]>=0 and cell[1]>=0 and cell[0]<width and cell[1]<height
 
 def get_neighbours(cell, width, height):
-    x, y = cell[0], cell[1]
-    candidates = [(x-1, y), (x, y-1), (x+1, y), (x, y+1)]
-    neighbours = []
-    for cell in candidates:
-        if is_valid_cell(cell, width, height):
-            neighbours.append(cell)
-    return neighbours
+    return filter(lambda(x): is_valid_cell(x, width, height),
+                  set([above(cell), below(cell), left(cell), right(cell)]))
 
 def is_intact(cell, walls):
-    x, y = cell[0], cell[1]
-    return (x,y,x+1,y) in walls \
-       and (x,y,x,y+1) in walls \
-       and (x,y+1,x+1,y+1) in walls \
-       and (x+1,y,x+1,y+1) in walls
+    return walls_of(cell).issubset(walls)
+
+def above(cell):
+    return (cell[0], cell[1] - 1)
+def left(cell):
+    return (cell[0] - 1, cell[1])
+def below(cell):
+    return (cell[0], cell[1] + 1)
+def right(cell):
+    return (cell[0] + 1, cell[1])
+
+def top_wall(cell):
+    return (cell[0], cell[1], cell[0]+1, cell[1])
+def bottom_wall(cell):
+    return (cell[0], cell[1]+1, cell[0]+1, cell[1]+1)
+def left_wall(cell):
+    return (cell[0], cell[1], cell[0], cell[1]+1)
+def right_wall(cell):
+    return (cell[0]+1, cell[1], cell[0]+1, cell[1]+1)
+
+def walls_of(cell):
+    return set([top_wall(cell), bottom_wall(cell),
+                left_wall(cell), right_wall(cell)])
 
 def wall_between(cell_1, cell_2):
-    x1, y1 = cell_1[0], cell_1[1]
-    x2, y2 = cell_2[0], cell_2[1]
-    if x1 > x2 or y1 > y2:
-        return wall_between(cell_2, cell_1)
-    if x1 == x2:
-        return (x2,y2,x2+1,y2)
-    else:
-        return (x2,y2,x2,y2+1)
+    common_walls = walls_of(cell_1).intersection(walls_of(cell_2))
+    return common_walls.pop()
 
 def all_walls(width, height):
-    walls = []
-    for x in range(0, width+1):
-        for y in range(0, height+1):
-            if x < width:
-                walls.append((x,y,x+1,y))
-            if y < height:
-                walls.append((x,y,x,y+1))
+    walls = set()
+    for x in range(0, width ):
+        for y in range(0, height):
+            walls.update(walls_of((x,y)))
     return walls
 
 def print_maze(width, height, walls):
@@ -79,5 +77,3 @@ def print_maze(width, height, walls):
             else:
                 stdout.write(' ')
         stdout.write('\n')
-
-make_maze(10, 8)
