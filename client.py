@@ -69,9 +69,7 @@ def do_player_update(window, world, library_url):
     image = imageload(image_data)
 
     new_position = world['player'][0]
-    window.fill(BLACK)
     window.blit(image, new_position)
-    display.flip()
 
 def do_wall_update(window, world, library_url):
     if 'wall_0' not in world:
