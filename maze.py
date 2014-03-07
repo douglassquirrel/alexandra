@@ -2,7 +2,7 @@
 # http://www.mazeworks.com/mazegen/mazetut/index.htm
 
 from random import choice as random_choice
-from sys import stdout
+from sys import argv, stdout
 
 def make_maze(width, height):
     walls = all_walls(width, height)
@@ -77,3 +77,8 @@ def print_maze(width, height, walls):
             else:
                 stdout.write(' ')
         stdout.write('\n')
+
+if __name__ == "__main__":
+    width, height = int(argv[1]), int(argv[2])
+    walls = make_maze(width, height)
+    print_maze(width, height, walls)
