@@ -3,35 +3,7 @@ from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
 from time import sleep
 from sys import exit
 from urllib2 import URLError, urlopen
-
-class Vector:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def add(self, vector):
-        return Vector(self.x + vector.x, self.y + vector.y)
-
-    def in_rect(self, rect):
-        return rect.top_left._above_and_left_of(self) \
-           and self._above_and_left_of(rect.bottom_right)
-
-    def to_pair(self):
-        return [self.x, self.y]
-
-    def _above_and_left_of(self, vector):
-        return self.x <= vector.x and self.y <= vector.y
-
-class Rect:
-    def __init__(self, top_left, bottom_right):
-        self.top_left = top_left
-        self.bottom_right = bottom_right
-
-    def in_rect(self, rect):
-        return self.top_left.in_rect(rect) and self.bottom_right.in_rect(rect)
-
-    def move(self, v):
-        return Rect(self.top_left.add(v), self.bottom_right.add(v))
+from vector import Vector, Rect
 
 def init():
     channel = create_channel()
