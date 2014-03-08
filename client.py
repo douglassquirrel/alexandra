@@ -62,13 +62,13 @@ def do_world_update(window, world, library_url):
     display.flip()
 
 def do_player_update(window, world, library_url):
-    if 'player' not in world:
+    if 'player_0' not in world:
         return
-    image_url = library_url + '/player/player_image.png'
+    image_url = library_url + '/player/player.png'
     image_data = StringIO(urlopen(image_url).read())
     image = imageload(image_data)
 
-    new_position = world['player'][0]
+    new_position = world['player_0']['position']
     window.blit(image, new_position)
 
 def do_wall_update(window, world, library_url):
@@ -82,8 +82,8 @@ def do_wall_update(window, world, library_url):
     i = 0
     wall_name = 'wall_%d' % (i,)
     while wall_name in world:
-        position = world[wall_name][0]
-        rotation = world[wall_name][1]
+        position = world[wall_name]['position']
+        rotation = world[wall_name]['rotation']
         rotated_image = rotate(image, rotation)
         window.blit(rotated_image, position)
         i += 1

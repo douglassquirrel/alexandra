@@ -32,31 +32,33 @@ def init_config(channel):
     return {'field_rect': Rect(Vector(0, 0),
                                Vector(config['field_width'],
                                       config['field_height'])),
-            'width': 50,
-            'height': 50,
             'library_url': library_url,
             'tick': config['tick_seconds']}
 
-def main_loop(channel, movement_queue, field_rect, width, height, tick):
+def main_loop(channel, movement_queue, field_rect, library_url, tick):
     while True:
         movement = get_movement(channel, movement_queue)
         if movement is not None:
-            filter_movement(movement, field_rect, width, height)
+            filter_movement(movement, field_rect, library_url)
         sleep(tick)
 
-def filter_movement(movement, field_rect, width, height):
+def filter_movement(movement, field_rect, library_url):
     entity = movement['entity']
+    entity_data_url = '%s/%s/%s.json' % (library_url, entity, entity)
+    entity_data = load(urlopen(entity_data_url))
+    width, height = entity_data['width'], entity_data['height']
+
     from_position, to_position = movement['from'], movement['to']
     from_rotation = movement['from_rotation']
     to_rotation = movement['to_rotation']
 
-    if entity == 'player' and not is_legal(to_position[0], to_position[1],
-                                           field_rect, width, height):
-        new_position = from_position
-    else:
+    if is_legal(to_position[0], to_position[1], field_rect, width, height):
         new_position = to_position
+    else:
+        new_position = from_position
 
     approved_movement = {'entity': entity,
+                         'index': movement['index'],
                          'from': from_position, 'to': new_position,
                          'from_rotation': from_rotation,
                          'to_rotation': to_rotation}
@@ -77,5 +79,5 @@ def get_movement(channel, movement_queue):
         return None
 
 channel, movement_queue, config = init()
-main_loop(channel, movement_queue, config['field_rect'],
-          config['width'], config['height'], config['tick'])
+main_loop(channel, movement_queue, config['field_rect'], config['library_url'],
+          config['tick'])

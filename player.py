@@ -6,11 +6,13 @@ from sys import exit
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
 IMAGE_FILE = 'player_image.png'
+WIDTH = 50
+HEIGHT = 50
 
 def init():
     channel = create_channel()
     config = init_config(channel)
-    publish_image(config['library_url'])
+    publish_info(config['library_url'])
     position = (config['start_x'], config['start_y'])
     send_movement(position, position, channel)
     commands_queue = subscribe(channel, 'commands.player')
@@ -37,26 +39,33 @@ def init_config(channel):
 
     return {'start_x': config['player_start_x'],
             'start_y': config['player_start_y'],
-            'width': 50,
-            'height': 50,
+            'width': WIDTH,
+            'height': HEIGHT,
             'library_url': library_url,
             'deltas': {'left': (-5, 0), 'right': (5, 0),
                        'up': (0, -5), 'down': (0, 5)}}
 
-def publish_image(library_url):
-    image_data = open(IMAGE_FILE).read()
+def publish_info(library_url):
+    publish_to_url(open(IMAGE_FILE).read(),
+                   library_url + '/player/player.png',
+                   'image/png')
+    publish_to_url(dumps({'width': WIDTH, 'height': HEIGHT}),
+                   library_url + '/player/player.json',
+                   'application/json')
+
+def publish_to_url(data, url, content_type):
     opener = build_opener(HTTPHandler)
-    request = Request(library_url + '/player/player_image.png', image_data)
-    request.add_header('Content-Type', 'image/png')
+    request = Request(url, data)
+    request.add_header('Content-Type', content_type)
     request.get_method = lambda: 'PUT'
     opener.open(request)
 
 def main_loop(channel, commands_queue, world_queue, position, deltas):
     while True:
         world = loads(get_message_block(channel, world_queue))
-        if 'player' not in world:
+        if 'player_0' not in world:
             continue
-        position = world['player'][0]
+        position = world['player_0']['position']
         command = get_input(channel, commands_queue)
         if command is not None:
             do(command, position, deltas)
@@ -69,7 +78,8 @@ def do(command, position, deltas):
     send_movement(position, new_position, channel)
 
 def send_movement(from_position, to_position, channel):
-    movement = {'entity': 'player', 'from': from_position, 'to': to_position,
+    movement = {'entity': 'player', 'index': 0,
+                'from': from_position, 'to': to_position,
                 'from_rotation': 0, 'to_rotation': 0}
     publish(channel, 'movement.player', dumps(movement))
 

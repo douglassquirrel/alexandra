@@ -7,11 +7,13 @@ from sys import exit
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
 IMAGE_FILE = 'wall.png'
+WIDTH = 80
+HEIGHT = 3
 
 def init():
     channel = create_channel()
     config = init_config(channel)
-    publish_image(config['library_url'], IMAGE_FILE)
+    publish_info(config['library_url'])
     world_queue = subscribe(channel, 'world')
 
     return channel, world_queue, config
@@ -47,11 +49,18 @@ def draw_maze(walls, cell_width):
             rotation = -90
         send_movement(position, rotation, index, channel)
 
-def publish_image(library_url, image_file):
-    image_data = open(image_file).read()
+def publish_info(library_url):
+    publish_to_url(open(IMAGE_FILE).read(),
+                   library_url + '/wall/wall.png',
+                   'image/png')
+    publish_to_url(dumps({'width': WIDTH, 'height': HEIGHT}),
+                   library_url + '/wall/wall.json',
+                   'application/json')
+
+def publish_to_url(data, url, content_type):
     opener = build_opener(HTTPHandler)
-    request = Request(library_url + '/wall/' + image_file, image_data)
-    request.add_header('Content-Type', 'image/png')
+    request = Request(url, data)
+    request.add_header('Content-Type', content_type)
     request.get_method = lambda: 'PUT'
     opener.open(request)
 
@@ -62,7 +71,8 @@ def main_loop(channel, world_queue):
 
 def send_movement(position, rotation, index, channel):
     name = 'wall_%d' % (index,)
-    movement = {'entity': name, 'from': position, 'to': position,
+    movement = {'entity': 'wall', 'index': index,
+                'from': position, 'to': position,
                 'from_rotation': rotation, 'to_rotation': rotation}
     publish(channel, 'movement.' + name, dumps(movement))
 
