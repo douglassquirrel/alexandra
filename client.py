@@ -4,7 +4,6 @@ from pubsub import create_channel, publish, subscribe, unsubscribe, \
 from pygame import display, draw, event, init, key, quit, Rect
 from pygame.image import load as imageload
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
-from pygame.transform import rotate
 from StringIO import StringIO
 from sys import exit
 from time import sleep
@@ -64,30 +63,29 @@ def do_world_update(window, world, library_url):
 def do_player_update(window, world, library_url):
     if 'player_0' not in world:
         return
-    image_url = library_url + '/player/player.png'
-    image_data = StringIO(urlopen(image_url).read())
-    image = imageload(image_data)
-
+    image = get_image(library_url + '/player/player.png')
     new_position = world['player_0']['position']
     window.blit(image, new_position)
 
 def do_wall_update(window, world, library_url):
-    if 'wall_0' not in world:
+    if 'wall_horizontal_0' not in world and \
+       'wall_vertical_0' not in world:
         return
 
-    image_url = library_url + '/wall/wall.png'
-    image_data = StringIO(urlopen(image_url).read())
-    image = imageload(image_data)
+    h_image = get_image(library_url + '/wall_horizontal/wall_horizontal.png')
+    v_image = get_image(library_url + '/wall_vertical/wall_vertical.png')
 
-    i = 0
-    wall_name = 'wall_%d' % (i,)
-    while wall_name in world:
+    for wall_name in filter(lambda(x): x.startswith('wall'), world.keys()):
+        if world[wall_name]['entity'] == 'wall_horizontal':
+            image = h_image
+        else:
+            image = v_image
         position = world[wall_name]['position']
-        rotation = world[wall_name]['rotation']
-        rotated_image = rotate(image, rotation)
-        window.blit(rotated_image, position)
-        i += 1
-        wall_name = 'wall_%d' % (i,)
+        window.blit(image, position)
+
+def get_image(url):
+    data = StringIO(urlopen(url).read())
+    return imageload(data)
 
 def main_loop(window, channel, world_queue, library_url):
     while True:

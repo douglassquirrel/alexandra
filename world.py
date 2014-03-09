@@ -39,10 +39,8 @@ def main_loop(channel, movement_queue, tick):
             entity = movement['entity']
             index = movement['index']
             position = movement['to']
-            rotation = movement['to_rotation']
             name = '%s_%d' % (entity, index)
-            world[name] = {'entity': entity, 'position': position,
-                           'rotation': rotation}
+            world[name] = {'entity': entity, 'position': position}
         publish(channel, 'world', dumps(world))
         sleep(tick)
 

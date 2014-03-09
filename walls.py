@@ -6,9 +6,12 @@ from time import sleep
 from sys import exit
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
-IMAGE_FILE = 'wall.png'
-WIDTH = 80
-HEIGHT = 3
+H_IMAGE_FILE = 'wall_horizontal.png'
+H_WIDTH = 80
+H_HEIGHT = 3
+V_IMAGE_FILE = 'wall_vertical.png'
+V_WIDTH = 3
+V_HEIGHT = 80
 
 def init():
     channel = create_channel()
@@ -44,17 +47,23 @@ def draw_maze(walls, cell_width):
     for index, wall in enumerate(walls):
         position = (wall[0] * cell_width, wall[1] * cell_width)
         if wall[1] == wall[3]:
-            rotation = 0
+            orientation = 'horizontal'
         else:
-            rotation = -90
-        send_movement(position, rotation, index, channel)
+            orientation = 'vertical'
+        send_movement(position, orientation, index, channel)
 
 def publish_info(library_url):
-    publish_to_url(open(IMAGE_FILE).read(),
-                   library_url + '/wall/wall.png',
+    publish_to_url(open(H_IMAGE_FILE).read(),
+                   library_url + '/wall_horizontal/' + H_IMAGE_FILE,
                    'image/png')
-    publish_to_url(dumps({'width': WIDTH, 'height': HEIGHT}),
-                   library_url + '/wall/wall.json',
+    publish_to_url(open(V_IMAGE_FILE).read(),
+                   library_url + '/wall_vertical/' + V_IMAGE_FILE,
+                   'image/png')
+    publish_to_url(dumps({'width': H_WIDTH, 'height': H_HEIGHT}),
+                   library_url + '/wall_horizontal/wall_horizontal.json',
+                   'application/json')
+    publish_to_url(dumps({'width': V_WIDTH, 'height': V_HEIGHT}),
+                   library_url + '/wall_vertical/wall_vertical.json',
                    'application/json')
 
 def publish_to_url(data, url, content_type):
@@ -69,11 +78,11 @@ def main_loop(channel, world_queue):
         world = loads(get_message_block(channel, world_queue))
         pass
 
-def send_movement(position, rotation, index, channel):
-    name = 'wall_%d' % (index,)
-    movement = {'entity': 'wall', 'index': index,
-                'from': position, 'to': position,
-                'from_rotation': rotation, 'to_rotation': rotation}
+def send_movement(position, orientation, index, channel):
+    entity = 'wall_%s' % orientation
+    name = '%s_%d' % (entity, index,)
+    movement = {'entity': entity, 'index': index,
+                'from': position, 'to': position}
     publish(channel, 'movement.' + name, dumps(movement))
 
 channel, world_queue, config = init()

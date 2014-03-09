@@ -49,8 +49,6 @@ def filter_movement(movement, field_rect, library_url):
     width, height = entity_data['width'], entity_data['height']
 
     from_position, to_position = movement['from'], movement['to']
-    from_rotation = movement['from_rotation']
-    to_rotation = movement['to_rotation']
 
     if is_legal(to_position[0], to_position[1], field_rect, width, height):
         new_position = to_position
@@ -59,9 +57,7 @@ def filter_movement(movement, field_rect, library_url):
 
     approved_movement = {'entity': entity,
                          'index': movement['index'],
-                         'from': from_position, 'to': new_position,
-                         'from_rotation': from_rotation,
-                         'to_rotation': to_rotation}
+                         'from': from_position, 'to': new_position}
     publish(channel, 'decision.movement.' + entity,
             dumps(approved_movement))
 

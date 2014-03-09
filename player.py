@@ -79,8 +79,7 @@ def do(command, position, deltas):
 
 def send_movement(from_position, to_position, channel):
     movement = {'entity': 'player', 'index': 0,
-                'from': from_position, 'to': to_position,
-                'from_rotation': 0, 'to_rotation': 0}
+                'from': from_position, 'to': to_position}
     publish(channel, 'movement.player', dumps(movement))
 
 def get_input(channel, commands_queue):
