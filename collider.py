@@ -35,24 +35,33 @@ def init_config(channel):
             'tick': config['tick_seconds']}
 
 def main_loop(channel, world_queue, movement_queue, library_url, tick):
+    world = loads(get_message_block(channel, world_queue))
+    del world['tick']
     while True:
-        world = loads(get_message_block(channel, world_queue))
-        del world['tick']
+        new_world = get_message(channel, world_queue)
+        if new_world is not None:
+            world = loads(new_world)
+            del world['tick']
+
         movements = get_all_messages(channel, movement_queue)
         for movement in movements:
-            check(loads(movement), world, library_url)
+            collisions = get_collisions(loads(movement), world, library_url)
+            print collisions
+        sleep(tick/5.0)
 
-def check(movement, world, library_url):
+def get_collisions(movement, world, library_url):
     moving_entity = movement['entity']
     moving_rect = get_rect_for(moving_entity, movement['to'], library_url)
 
+    collisions = []
     for entity_data in world.values():
         entity, position = entity_data['entity'], entity_data['position']
         if entity == moving_entity:
             continue
         rect = get_rect_for(entity, position, library_url)
         if rect.intersects(moving_rect):
-            print 'Collision: %s hits %s' % (movement, entity_data)
+            collisions.append((movement, entity_data))
+    return collisions
 
 def get_rect_for(entity, position, library_url):
     url = '%s/%s/%s.json' % (library_url, entity, entity)

@@ -40,7 +40,7 @@ def main_loop(channel, movement_queue, field_rect, library_url, tick):
         movement = get_movement(channel, movement_queue)
         if movement is not None:
             filter_movement(movement, field_rect, library_url)
-        sleep(tick)
+        sleep(tick/5.0)
 
 def filter_movement(movement, field_rect, library_url):
     entity = movement['entity']

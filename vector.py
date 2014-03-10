@@ -5,7 +5,7 @@ class Vector:
 
     @classmethod
     def frompair(cls, a):
-        return Vector(a[0], a[1])
+        return cls(a[0], a[1])
 
     def add(self, vector):
         return Vector(self.x + vector.x, self.y + vector.y)
