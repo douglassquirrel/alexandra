@@ -3,6 +3,10 @@ class Vector:
         self.x = x
         self.y = y
 
+    @classmethod
+    def frompair(cls, a):
+        return Vector(a[0], a[1])
+
     def add(self, vector):
         return Vector(self.x + vector.x, self.y + vector.y)
 
@@ -16,6 +20,9 @@ class Vector:
     def _above_and_left_of(self, vector):
         return self.x <= vector.x and self.y <= vector.y
 
+    def __repr__(self):
+        return '(%d, %d)' % (self.x, self.y)
+
 class Rect:
     def __init__(self, top_left, bottom_right):
         self.top_left = top_left
@@ -26,3 +33,10 @@ class Rect:
 
     def move(self, v):
         return Rect(self.top_left.add(v), self.bottom_right.add(v))
+
+    def intersects(self, r):
+        return self.top_left._above_and_left_of(r.bottom_right) and \
+               r.top_left._above_and_left_of(self.bottom_right)
+
+    def __repr__(self):
+        return 'Rect: %s, %s' % (self.top_left, self.bottom_right)
