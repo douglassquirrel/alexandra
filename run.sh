@@ -2,7 +2,7 @@
 
 trap 'killall' INT
 
-PAUSE_SEC=1
+PAUSE_SEC=0.2
 
 killall() {
     trap '' INT TERM
