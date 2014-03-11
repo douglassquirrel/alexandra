@@ -44,31 +44,40 @@ def main_loop(channel, world_queue, movement_queue, library_url, tick):
             del world['tick']
 
         movements = get_all_messages(channel, movement_queue)
-        for movement in movements:
-            collisions = get_collisions(loads(movement), world, library_url)
-            print collisions
+        for m in movements:
+            movement = loads(m)
+            movement['collisions'] = collisions(movement, world, library_url)
+            publish(channel, 'movement_with_collisions.' + movement['entity'],
+                    dumps(movement))
         sleep(tick/5.0)
 
-def get_collisions(movement, world, library_url):
+def collisions(movement, world, library_url):
     moving_entity = movement['entity']
-    moving_rect = get_rect_for(moving_entity, movement['to'], library_url)
+    moving_rect = get_rect_for(moving_entity, movement['to'], library_url, {})
 
     collisions = []
+    dimensions = {}
     for entity_data in world.values():
         entity, position = entity_data['entity'], entity_data['position']
         if entity == moving_entity:
             continue
-        rect = get_rect_for(entity, position, library_url)
+        rect = get_rect_for(entity, position, library_url, dimensions)
         if rect.intersects(moving_rect):
-            collisions.append((movement, entity_data))
+            collisions.append(entity_data)
     return collisions
 
-def get_rect_for(entity, position, library_url):
-    url = '%s/%s/%s.json' % (library_url, entity, entity)
-    data = load(urlopen(url))
+def get_rect_for(entity, position, library_url, dimensions):
+    width, height = get_dimensions(entity, library_url, dimensions)
     top_left = Vector.frompair(position)
-    bottom_right = top_left.add(Vector(data['width'], data['height']))
+    bottom_right = top_left.add(Vector(width, height))
     return Rect(top_left, bottom_right)
+
+def get_dimensions(entity, library_url, dimensions):
+    if entity not in dimensions:
+        url = '%s/%s/%s.json' % (library_url, entity, entity)
+        data = load(urlopen(url))
+        dimensions[entity] = (data['width'], data['height'])
+    return dimensions[entity]
 
 channel, world_queue, movement_queue, config = init()
 main_loop(channel, world_queue, movement_queue,

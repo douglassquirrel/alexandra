@@ -3,12 +3,11 @@ from pubsub import create_channel, publish, subscribe, unsubscribe, get_message
 from time import sleep
 from sys import exit
 from urllib2 import URLError, urlopen
-from vector import Vector, Rect
 
 def init():
     channel = create_channel()
     config = init_config(channel)
-    movement_queue = subscribe(channel, 'movement.*')
+    movement_queue = subscribe(channel, 'movement_with_collisions.*')
 
     return channel, movement_queue, config
 
@@ -29,28 +28,21 @@ def init_config(channel):
         exit(1)
     config = load(config_file)
 
-    return {'field_rect': Rect(Vector(0, 0),
-                               Vector(config['field_width'],
-                                      config['field_height'])),
-            'library_url': library_url,
+    return {'library_url': library_url,
             'tick': config['tick_seconds']}
 
-def main_loop(channel, movement_queue, field_rect, library_url, tick):
+def main_loop(channel, movement_queue, library_url, tick):
     while True:
-        movement = get_movement(channel, movement_queue)
-        if movement is not None:
-            filter_movement(movement, field_rect, library_url)
+        message = get_message(channel, movement_queue)
+        if message is not None:
+            filter_movement(loads(message), library_url)
         sleep(tick/5.0)
 
-def filter_movement(movement, field_rect, library_url):
+def filter_movement(movement, library_url):
     entity = movement['entity']
-    entity_data_url = '%s/%s/%s.json' % (library_url, entity, entity)
-    entity_data = load(urlopen(entity_data_url))
-    width, height = entity_data['width'], entity_data['height']
-
     from_position, to_position = movement['from'], movement['to']
 
-    if is_legal(to_position[0], to_position[1], field_rect, width, height):
+    if entity != 'player' or len(movement['collisions']) == 0:
         new_position = to_position
     else:
         new_position = from_position
@@ -61,19 +53,5 @@ def filter_movement(movement, field_rect, library_url):
     publish(channel, 'decision.movement.' + entity,
             dumps(approved_movement))
 
-def is_legal(new_x, new_y, field_rect, width, height):
-    top_left = Vector(new_x, new_y)
-    bottom_right = top_left.add(Vector(width, height))
-    new_rect = Rect(top_left, bottom_right)
-    return new_rect.in_rect(field_rect)
-
-def get_movement(channel, movement_queue):
-    message = get_message(channel, movement_queue)
-    if message:
-        return loads(message)
-    else:
-        return None
-
 channel, movement_queue, config = init()
-main_loop(channel, movement_queue, config['field_rect'], config['library_url'],
-          config['tick'])
+main_loop(channel, movement_queue, config['library_url'], config['tick'])
