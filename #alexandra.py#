@@ -1,16 +1,14 @@
 from json import dumps, load, loads
 from pubsub import create_channel, publish, subscribe, unsubscribe, \
-                   get_message, get_all_messages, get_message_block
+                   get_message, get_message_block
 from StringIO import StringIO
 from urllib2 import urlopen
 
 class Queue:
     def __init__(self, channel, topic):
-        self._channel = channel
-        self._q = subscribe(self._channel, topic)
+        self._q = subscribe(channel, topic)
 
-    def fetch_all(self):
-        return map(loads, get_all_messages(self._channel, self._q))
+    def fe
 
 class Alexandra:
     def __init__(self):

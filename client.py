@@ -26,22 +26,22 @@ def get_command():
     return None
 
 BLACK = (0, 0, 0)
-def do_world_update(window, world, alex):
+def do_world_update(window, alex):
     window.fill(BLACK)
-    do_player_update(window, world, alex)
-    do_wall_update(window, world, alex)
+    do_player_update(window, alex)
+    do_wall_update(window, alex)
     display.flip()
 
-def do_player_update(window, world, alex):
-    if 'player_0' not in world:
+def do_player_update(window, alex):
+    if 'player_0' not in alex.world:
         return
     image = load(alex.get_library_file('/player/player.png'))
-    new_position = world['player_0']['position']
+    new_position = alex.world['player_0']['position']
     window.blit(image, new_position)
 
-def do_wall_update(window, world, library_url):
-    if 'wall_horizontal_0' not in world and \
-       'wall_vertical_0' not in world:
+def do_wall_update(window, alex):
+    if 'wall_horizontal_0' not in alex.world and \
+       'wall_vertical_0' not in alex.world:
         return
 
     h_image_path = '/wall_horizontal/wall_horizontal.png'
@@ -49,21 +49,21 @@ def do_wall_update(window, world, library_url):
     h_image = load(alex.get_library_file(h_image_path))
     v_image = load(alex.get_library_file(v_image_path))
 
-    for wall_name in filter(lambda(x): x.startswith('wall'), world.keys()):
-        if world[wall_name]['entity'] == 'wall_horizontal':
+    for wall_name in filter(lambda(x): x.startswith('wall'), alex.world.keys()):
+        if alex.world[wall_name]['entity'] == 'wall_horizontal':
             image = h_image
         else:
             image = v_image
-        position = world[wall_name]['position']
+        position = alex.world[wall_name]['position']
         window.blit(image, position)
 
 def main_loop(window, alex):
     while True:
-        world = alex.next_tick()
-        do_world_update(window, world, alex)
+        alex.next_tick()
+        do_world_update(window, alex)
         command = get_command()
         if command is not None:
-            alex.publish('commands.player', dumps(command))
+            alex.publish('commands.player', command)
         check_quit()
 
 alex = Alexandra()
