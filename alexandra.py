@@ -41,11 +41,15 @@ class Alexandra:
         request.get_method = lambda: 'PUT'
         opener.open(request)
 
-    def subscribe(self, topic):
-        return Queue(self._channel, topic, self._subscribe_world, self)
+    def get_library_file(self, path):
+        url = self._library_url + path
+        return StringIO(urlopen(url).read())
 
     def publish(self, topic, message):
         publish(self._channel, topic, dumps(message))
+
+    def subscribe(self, topic):
+        return Queue(self._channel, topic, self._subscribe_world, self)
 
     def next_tick(self):
         if self._world_queue is None:
@@ -56,10 +60,6 @@ class Alexandra:
         new_world = get_message(self._channel, self._world_queue)
         if new_world is not None:
             self.world = loads(new_world)
-
-    def get_library_file(self, path):
-        url = self._library_url + path
-        return StringIO(urlopen(url).read())
 
     def _init_world_queue(self):
         self._world_queue = subscribe(self._channel, 'world')
