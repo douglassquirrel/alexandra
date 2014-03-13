@@ -12,19 +12,29 @@ def init_window(field_width, field_height):
     display.set_caption('Alexandra')
     return window
 
-def check_quit():
-    for e in event.get():
-        if e.type == QUIT:
-            quit()
-            exit()
+def update(window, alex):
+    do_world_update(window, alex)
+    command = get_command()
+    if command is not None:
+        alex.publish('commands.player', command)
+    check_quit()
 
-input_keys = {K_DOWN: 'down', K_LEFT: 'left', K_RIGHT: 'right', K_UP: 'up'}
+def check_quit():
+    if len([e for e in event.get() if e.type == QUIT]) > 0:
+        quit()
+        exit()
+
+command_dict = {K_DOWN: 'down', K_LEFT: 'left', K_RIGHT: 'right', K_UP: 'up'}
+known_keys = set(command_dict.keys())
 def get_command():
-    keyState = key.get_pressed()
-    for k in input_keys.keys():
-        if keyState[k]:
-            return input_keys[k]
-    return None
+    key_states = enumerate(key.get_pressed())
+    pressed_keys = set([x for (x,y) in key_states if y != 0])
+    known_pressed_keys = pressed_keys.intersection(known_keys)
+    if len(known_pressed_keys) > 0:
+        selected_key = sorted(list(known_pressed_keys))[0]
+        return command_dict[selected_key]
+    else:
+        return None
 
 BLACK = (0, 0, 0)
 def do_world_update(window, alex):
@@ -39,16 +49,6 @@ def do_entity_update(entity_data, window, alex):
     image = load(StringIO(alex.get_library_file(image_path)))
     window.blit(image, position)
 
-def main_loop(window, alex):
-    alex.each_tick(lambda(x): update(window, x))
-
-def update(window, alex):
-    do_world_update(window, alex)
-    command = get_command()
-    if command is not None:
-        alex.publish('commands.player', command)
-    check_quit()
-
 alex = Alexandra()
 window = init_window(alex.config['field_width'], alex.config['field_height'])
-main_loop(window, alex)
+alex.each_tick(lambda(x): update(window, x))
