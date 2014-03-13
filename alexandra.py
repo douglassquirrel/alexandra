@@ -2,6 +2,7 @@ from json import dumps, load, loads
 from pubsub import create_channel, publish, subscribe, unsubscribe, \
                    get_message, get_all_messages, get_message_block
 from StringIO import StringIO
+from time import sleep
 from urllib2 import build_opener, HTTPHandler, Request, urlopen
 
 class Queue:
@@ -33,6 +34,18 @@ class Alexandra:
         self.world = None
         if self._subscribe_world is True:
             self.next_tick()
+
+    def each_tick(self, f):
+        while True:
+            self.next_tick()
+            f(self)
+
+    def monitor(self, queue, f):
+        while True:
+            message = queue.next()
+            if message is not None:
+                f(message, self)
+            sleep(self.config['tick_seconds']/5)
 
     def enter_in_library(self, data, path, content_type):
         opener = build_opener(HTTPHandler)

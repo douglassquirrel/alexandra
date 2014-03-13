@@ -58,13 +58,14 @@ def do_wall_update(window, alex):
         window.blit(image, position)
 
 def main_loop(window, alex):
-    while True:
-        alex.next_tick()
-        do_world_update(window, alex)
-        command = get_command()
-        if command is not None:
-            alex.publish('commands.player', command)
-        check_quit()
+    alex.each_tick(lambda(x): update(window, x))
+
+def update(window, alex):
+    do_world_update(window, alex)
+    command = get_command()
+    if command is not None:
+        alex.publish('commands.player', command)
+    check_quit()
 
 alex = Alexandra()
 window = init_window(alex.config['field_width'], alex.config['field_height'])

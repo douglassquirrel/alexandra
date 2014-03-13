@@ -6,10 +6,8 @@ def main_loop(alex):
     world = {'tick': 0}
     while True:
         world['tick'] += 1
-        for movement in movement_queue.fetch_all():
-            entity = movement['entity']
-            index = movement['index']
-            position = movement['to']
+        for m in movement_queue.fetch_all():
+            entity, index, position = m['entity'], m['index'], m['to']
             name = '%s_%d' % (entity, index)
             world[name] = {'entity': entity, 'position': position}
         alex.publish('world', world)

@@ -1,6 +1,5 @@
 from alexandra import Alexandra
 from json import dumps
-from time import sleep
 
 IMAGE_FILE = 'player_image.png'
 WIDTH = 50
@@ -14,19 +13,12 @@ def init(alex):
                           '/player/player.json', 'application/json')
     position = (alex.config['player_start_x'], alex.config['player_start_y'])
     send_movement(position, position, alex)
-    commands_queue = alex.subscribe('commands.player')
+    return alex.subscribe('commands.player')
 
-    return commands_queue, position
-
-def main_loop(commands_queue, position, alex):
-    while True:
-        command = commands_queue.next()
-        if command is not None and 'player_0' in alex.world:
-            position = alex.world['player_0']['position']
-            do(command, position, alex)
-        sleep(alex.config['tick_seconds']/5.0)
-
-def do(command, position, alex):
+def move(command, alex):
+    if 'player_0' not in alex.world:
+        return
+    position = alex.world['player_0']['position']
     new_position = apply_command(command, position)
     send_movement(position, new_position, alex)
 
@@ -40,5 +32,5 @@ def send_movement(from_position, to_position, alex):
     alex.publish('movement.player', movement)
 
 alex = Alexandra(subscribe_world=True)
-commands_queue, position = init(alex)
-main_loop(commands_queue, position, alex)
+commands_queue = init(alex)
+alex.monitor(commands_queue, move)
