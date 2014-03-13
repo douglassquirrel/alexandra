@@ -2,7 +2,7 @@ from alexandra import Alexandra
 from time import sleep
 
 def main_loop(alex):
-    movement_queue = alex.subscribe('decision.movement.*')
+    movement_queue = alex.subscribe('decision_movement.*')
     world = {'tick': 0, 'entities': {}}
     while True:
         world['tick'] += 1

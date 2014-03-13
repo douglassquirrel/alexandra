@@ -13,7 +13,7 @@ def filter_movement(movement, alex):
     approved_movement = {'entity': entity,
                          'index': movement['index'],
                          'from': from_position, 'to': new_position}
-    alex.publish('decision.movement.' + entity, approved_movement)
+    alex.publish('decision_movement.' + entity, approved_movement)
 
 alex = Alexandra()
 movement_queue = alex.subscribe('movement_with_collisions.*')
