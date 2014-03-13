@@ -16,9 +16,9 @@ def init(alex):
     return alex.subscribe('commands.player')
 
 def move(command, alex):
-    if 'player_0' not in alex.world:
+    if 'player_0' not in alex.world['entities']:
         return
-    position = alex.world['player_0']['position']
+    position = alex.world['entities']['player_0']['position']
     new_position = apply_command(command, position)
     send_movement(position, new_position, alex)
 

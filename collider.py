@@ -3,19 +3,17 @@ from json import load
 from vector import Vector, Rect
 
 def add_collisions(movement, alex):
-    movement['collisions'] = collisions(movement, alex.world.copy())
+    movement['collisions'] = collisions(movement, alex.world['entities'])
     alex.publish('movement_with_collisions.' + movement['entity'],
                  movement)
 
-def collisions(movement, world):
-    del world['tick']
-
+def collisions(movement, entities_dict):
     dimensions = {}
-    entities = world.values()
-    detector = make_collision_detector(world, movement, alex, dimensions)
+    entities = entities_dict.values()
+    detector = make_collision_detector(movement, alex, dimensions)
     return filter(lambda(x): x is not None, map(detector, entities))
 
-def make_collision_detector(world, movement, alex, dimensions):
+def make_collision_detector(movement, alex, dimensions):
     moving_entity = movement['entity']
     moving_rect = get_rect_for(moving_entity, movement['to'], alex, {})
     return lambda(e): get_collision(e, moving_entity, moving_rect, alex,

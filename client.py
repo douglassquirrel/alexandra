@@ -33,15 +33,15 @@ def do_world_update(window, alex):
     display.flip()
 
 def do_player_update(window, alex):
-    if 'player_0' not in alex.world:
+    if 'player_0' not in alex.world['entities']:
         return
     image = load(alex.get_library_file('/player/player.png'))
-    new_position = alex.world['player_0']['position']
+    new_position = alex.world['entities']['player_0']['position']
     window.blit(image, new_position)
 
 def do_wall_update(window, alex):
-    if 'wall_horizontal_0' not in alex.world and \
-       'wall_vertical_0' not in alex.world:
+    if 'wall_horizontal_0' not in alex.world['entities'] and \
+       'wall_vertical_0' not in alex.world['entities']:
         return
 
     h_image_path = '/wall_horizontal/wall_horizontal.png'
@@ -49,12 +49,13 @@ def do_wall_update(window, alex):
     h_image = load(alex.get_library_file(h_image_path))
     v_image = load(alex.get_library_file(v_image_path))
 
-    for wall_name in filter(lambda(x): x.startswith('wall'), alex.world.keys()):
-        if alex.world[wall_name]['entity'] == 'wall_horizontal':
+    entities = alex.world['entities']
+    for wall_name in filter(lambda(x): x.startswith('wall'), entities.keys()):
+        if entities[wall_name]['entity'] == 'wall_horizontal':
             image = h_image
         else:
             image = v_image
-        position = alex.world[wall_name]['position']
+        position = entities[wall_name]['position']
         window.blit(image, position)
 
 def main_loop(window, alex):
