@@ -3,6 +3,7 @@ from json import dumps
 from pygame import display, event, init, key, quit
 from pygame.image import load
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
+from StringIO import StringIO
 from sys import exit
 
 def init_window(field_width, field_height):
@@ -35,7 +36,7 @@ def do_world_update(window, alex):
 def do_player_update(window, alex):
     if 'player_0' not in alex.world['entities']:
         return
-    image = load(alex.get_library_file('/player/player.png'))
+    image = load(StringIO(alex.get_library_file('/player/player.png')))
     new_position = alex.world['entities']['player_0']['position']
     window.blit(image, new_position)
 
@@ -46,8 +47,8 @@ def do_wall_update(window, alex):
 
     h_image_path = '/wall_horizontal/wall_horizontal.png'
     v_image_path = '/wall_vertical/wall_vertical.png'
-    h_image = load(alex.get_library_file(h_image_path))
-    v_image = load(alex.get_library_file(v_image_path))
+    h_image = load(StringIO(alex.get_library_file(h_image_path)))
+    v_image = load(StringIO(alex.get_library_file(v_image_path)))
 
     entities = alex.world['entities']
     for wall_name in filter(lambda(x): x.startswith('wall'), entities.keys()):

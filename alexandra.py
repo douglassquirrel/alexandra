@@ -1,7 +1,6 @@
 from json import dumps, load, loads
 from pubsub import create_channel, publish, subscribe, unsubscribe, \
                    get_message, get_all_messages, get_message_block
-from StringIO import StringIO
 from time import sleep
 from urllib2 import build_opener, HTTPHandler, Request, urlopen
 
@@ -28,6 +27,7 @@ class Alexandra:
     def __init__(self, subscribe_world=False):
         self._channel = create_channel()
         self._library_url = self._get_library_url()
+        self._library_files = {}
         self.config = self._get_config()
         self._subscribe_world = subscribe_world
         self._world_queue = None
@@ -55,8 +55,10 @@ class Alexandra:
         opener.open(request)
 
     def get_library_file(self, path):
-        url = self._library_url + path
-        return StringIO(urlopen(url).read())
+        if path not in self._library_files:
+            url = self._library_url + path
+            self._library_files[path] = {'data': urlopen(url).read()}
+        return self._library_files[path]['data']
 
     def publish(self, topic, message):
         publish(self._channel, topic, dumps(message))
@@ -84,4 +86,4 @@ class Alexandra:
         return library_url
 
     def _get_config(self):
-        return load(self.get_library_file('/config.json'))
+        return loads(self.get_library_file('/config.json'))

@@ -1,5 +1,5 @@
 from alexandra import Alexandra
-from json import load
+from json import loads
 from vector import Vector, Rect
 
 def add_collisions(movement, alex):
@@ -35,7 +35,7 @@ def get_rect_for(entity, position, alex, dimensions):
 
 def get_dimensions(entity, library_url, dimensions):
     if entity not in dimensions:
-        data = load(alex.get_library_file('/%s/%s.json' % (entity, entity)))
+        data = loads(alex.get_library_file('/%s/%s.json' % (entity, entity)))
         dimensions[entity] = (data['width'], data['height'])
     return dimensions[entity]
 
