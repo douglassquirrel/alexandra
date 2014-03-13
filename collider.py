@@ -9,19 +9,25 @@ def add_collisions(movement, alex):
 
 def collisions(movement, world):
     del world['tick']
+
+    dimensions = {}
+    entities = world.values()
+    detector = make_collision_detector(world, movement, alex, dimensions)
+    return filter(lambda(x): x is not None, map(detector, entities))
+
+def make_collision_detector(world, movement, alex, dimensions):
     moving_entity = movement['entity']
     moving_rect = get_rect_for(moving_entity, movement['to'], alex, {})
+    return lambda(e): get_collision(e, moving_entity, moving_rect, alex,
+                                    dimensions)
 
-    collisions = []
-    dimensions = {}
-    for entity_data in world.values():
-        entity, position = entity_data['entity'], entity_data['position']
-        if entity == moving_entity:
-            continue
-        rect = get_rect_for(entity, position, alex, dimensions)
-        if rect.intersects(moving_rect):
-            collisions.append(entity_data)
-    return collisions
+def get_collision(entity_data, moving_entity, moving_rect, alex, dimensions):
+    entity, position = entity_data['entity'], entity_data['position']
+    rect = get_rect_for(entity, position, alex, dimensions)
+    if entity != moving_entity and rect.intersects(moving_rect):
+        return entity_data
+    else:
+        return None
 
 def get_rect_for(entity, position, alex, dimensions):
     width, height = get_dimensions(entity, alex, dimensions)
