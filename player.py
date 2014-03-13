@@ -27,11 +27,12 @@ def main_loop(commands_queue, position, alex):
         sleep(alex.config['tick_seconds']/5.0)
 
 def do(command, position, alex):
-    delta = DELTAS.get(command)
-    if delta is None:
-        return position
-    new_position = (position[0] + delta[0], position[1] + delta[1])
+    new_position = apply_command(command, position)
     send_movement(position, new_position, alex)
+
+def apply_command(command, position):
+    delta = DELTAS.get(command, (0, 0))
+    return (position[0] + delta[0], position[1] + delta[1])
 
 def send_movement(from_position, to_position, alex):
     movement = {'entity': 'player', 'index': 0,

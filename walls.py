@@ -25,13 +25,17 @@ def init(alex):
                           'application/json')
 
 def draw_maze(walls, alex):
-    for index, wall in enumerate(walls):
-        position = (wall[0] * CELL_WIDTH, wall[1] * CELL_WIDTH)
-        if wall[1] == wall[3]:
-            orientation = 'horizontal'
-        else:
-            orientation = 'vertical'
-        send_movement(position, orientation, index, alex)
+    map(lambda(x): draw_wall(x[0], x[1], alex), enumerate(walls))
+
+def draw_wall(index, wall, alex):
+    position = (wall[0] * CELL_WIDTH, wall[1] * CELL_WIDTH)
+    send_movement(position, orientation(wall), index, alex)
+
+def orientation(wall):
+    if wall[1] == wall[3]:
+        return 'horizontal'
+    else:
+        return 'vertical'
 
 def main_loop(alex):
     while True:
