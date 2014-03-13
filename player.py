@@ -1,7 +1,7 @@
 from alexandra import Alexandra
 from json import dumps
 
-IMAGE_FILE = 'player_image.png'
+IMAGE_FILE = 'player.png'
 WIDTH = 50
 HEIGHT = 50
 DELTAS = {'left': (-5, 0), 'right': (5, 0), 'up': (0, -5), 'down': (0, 5)}
