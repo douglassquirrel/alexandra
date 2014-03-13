@@ -29,35 +29,15 @@ def get_command():
 BLACK = (0, 0, 0)
 def do_world_update(window, alex):
     window.fill(BLACK)
-    do_player_update(window, alex)
-    do_wall_update(window, alex)
+    updater = lambda(e): do_entity_update(e, window, alex)
+    map(updater, alex.world['entities'].values())
     display.flip()
 
-def do_player_update(window, alex):
-    if 'player_0' not in alex.world['entities']:
-        return
-    image = load(StringIO(alex.get_library_file('/player/player.png')))
-    new_position = alex.world['entities']['player_0']['position']
-    window.blit(image, new_position)
-
-def do_wall_update(window, alex):
-    if 'wall_horizontal_0' not in alex.world['entities'] and \
-       'wall_vertical_0' not in alex.world['entities']:
-        return
-
-    h_image_path = '/wall_horizontal/wall_horizontal.png'
-    v_image_path = '/wall_vertical/wall_vertical.png'
-    h_image = load(StringIO(alex.get_library_file(h_image_path)))
-    v_image = load(StringIO(alex.get_library_file(v_image_path)))
-
-    entities = alex.world['entities']
-    for wall_name in filter(lambda(x): x.startswith('wall'), entities.keys()):
-        if entities[wall_name]['entity'] == 'wall_horizontal':
-            image = h_image
-        else:
-            image = v_image
-        position = entities[wall_name]['position']
-        window.blit(image, position)
+def do_entity_update(entity_data, window, alex):
+    entity, position = entity_data['entity'], entity_data['position']
+    image_path = '/%s/%s.png' % (entity, entity)
+    image = load(StringIO(alex.get_library_file(image_path)))
+    window.blit(image, position)
 
 def main_loop(window, alex):
     alex.each_tick(lambda(x): update(window, x))
