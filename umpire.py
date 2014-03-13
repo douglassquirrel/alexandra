@@ -1,14 +1,7 @@
 from alexandra import Alexandra
 from time import sleep
 
-def main_loop(alex, movement_queue):
-    while True:
-        movement = movement_queue.next()
-        if movement is not None:
-            filter_movement(alex, movement)
-        sleep(alex.config['tick_seconds']/5.0)
-
-def filter_movement(alex, movement):
+def filter_movement(movement, alex):
     entity = movement['entity']
     from_position, to_position = movement['from'], movement['to']
 
@@ -24,4 +17,4 @@ def filter_movement(alex, movement):
 
 alex = Alexandra()
 movement_queue = alex.subscribe('movement_with_collisions.*')
-main_loop(alex, movement_queue)
+alex.monitor(movement_queue, filter_movement)

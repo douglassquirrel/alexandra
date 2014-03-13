@@ -1,16 +1,11 @@
 from alexandra import Alexandra
 from json import load
-from time import sleep
 from vector import Vector, Rect
 
-def main_loop(alex, movement_queue):
-    while True:
-        movement = movement_queue.next()
-        if movement is not None:
-            movement['collisions'] = collisions(movement, alex.world.copy())
-            alex.publish('movement_with_collisions.' + movement['entity'],
-                         movement)
-        sleep(alex.config['tick_seconds']/5.0)
+def add_collisions(movement, alex):
+    movement['collisions'] = collisions(movement, alex.world.copy())
+    alex.publish('movement_with_collisions.' + movement['entity'],
+                 movement)
 
 def collisions(movement, world):
     del world['tick']
@@ -42,4 +37,4 @@ def get_dimensions(entity, library_url, dimensions):
 
 alex = Alexandra(subscribe_world=True)
 movement_queue = alex.subscribe('movement.*')
-main_loop(alex, movement_queue)
+alex.monitor(movement_queue, add_collisions)
