@@ -30,15 +30,18 @@ class Alexandra:
         self._library_files = {}
         self.config = self._get_config()
         self._subscribe_world = subscribe_world
+        self._each_tick = []
         self._world_queue = None
         self.world = None
         if self._subscribe_world is True:
             self.next_tick()
 
-    def each_tick(self, f):
+    def on_each_tick(self, f):
+        self._each_tick.append(f)
+
+    def wait(self):
         while True:
             self.next_tick()
-            f(self)
 
     def monitor(self, queue, f):
         while True:
@@ -70,11 +73,17 @@ class Alexandra:
         if self._world_queue is None:
             self._init_world_queue()
         self.world = loads(get_message_block(self._channel, self._world_queue))
+        self.do_each_tick()
 
     def update_world(self):
         new_world = get_message(self._channel, self._world_queue)
         if new_world is not None:
             self.world = loads(new_world)
+            self.do_each_tick()
+
+    def do_each_tick(self):
+        for f in self._each_tick:
+            f(self)
 
     def _init_world_queue(self):
         self._world_queue = subscribe(self._channel, 'world')

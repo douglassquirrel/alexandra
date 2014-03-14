@@ -38,7 +38,7 @@ def orientation(wall):
         return 'vertical'
 
 def main_loop(alex):
-    alex.each_tick(lambda(x): None)
+    alex.wait()
 
 def send_movement(position, orientation, index, alex):
     entity = 'wall_%s' % orientation

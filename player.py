@@ -11,9 +11,13 @@ def init(alex):
                           '/player/player.png', 'image/png')
     alex.enter_in_library(dumps({'width': WIDTH, 'height': HEIGHT}),
                           '/player/player.json', 'application/json')
-    position = (alex.config['player_start_x'], alex.config['player_start_y'])
-    send_movement(position, position, alex)
     return alex.subscribe('commands.player')
+
+def start_if_not_present(alex):
+    if 'player_0' not in alex.world['entities']:
+        position = (alex.config['player_start_x'],
+                    alex.config['player_start_y'])
+        send_movement(position, position, alex)
 
 def move(command, alex):
     if 'player_0' not in alex.world['entities']:
@@ -32,5 +36,6 @@ def send_movement(from_position, to_position, alex):
     alex.publish('movement.player', movement)
 
 alex = Alexandra(subscribe_world=True)
+alex.on_each_tick(start_if_not_present)
 commands_queue = init(alex)
 alex.monitor(commands_queue, move)
