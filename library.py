@@ -1,9 +1,10 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from json import dumps
+from json import dumps, loads
 from os import fork
 from pubsub import create_channel, publish
-from sys import argv
 from time import sleep
+
+CONFIG_FILE = 'config.json'
 
 class Resources:
     def __init__(self):
@@ -73,12 +74,12 @@ def publish_url(host, port):
         sleep(1)
 
 resources = Resources()
-host, port = argv[1], int(argv[2])
-if len(argv) >= 4:
-    config_file = argv[3]
-    resources.add(path='/' + config_file,
-                  content_type='application/json',
-                  content=open(config_file).read())
+config_string = open(CONFIG_FILE).read()
+config = loads(config_string)
+host, port = config['library_host'], config['library_port']
+resources.add(path='/config.json',
+              content_type='application/json',
+              content=config_string)
 pid = fork()
 if pid > 0:
     run_server(host, port, resources)

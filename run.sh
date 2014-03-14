@@ -16,8 +16,7 @@ function run {
     sleep $PAUSE_SEC
 }
 
-COMMANDS=( "library.py localhost 8080 config.json" \
-           "collider.py" "umpire.py" "world.py" "client.py" \
+COMMANDS=( "library.py" "collider.py" "umpire.py" "world.py" "client.py" \
            "walls.py" "player.py" )
 
 for c in "${COMMANDS[@]}"
