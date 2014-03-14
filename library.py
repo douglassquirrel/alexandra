@@ -2,9 +2,26 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import dumps, loads
 from os import fork
 from pubsub import create_channel, publish
+from re import sub
 from time import sleep
 
 CONFIG_FILE = 'config.json'
+INDEX_TEMPLATE = '''
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Contents of %s</title>
+  </head>
+  <body>
+    <h2>Contents of %s</h2>
+    <ul>
+      %s
+    </ul>
+  </body>
+</html>
+'''
+LINK_TEMPLATE = '<li><a href="%s">%s</a></li>'
 
 class Resources:
     def __init__(self):
@@ -13,15 +30,22 @@ class Resources:
     def add(self, path, content_type, content):
         self.resources[path] = {'content_type': content_type,
                                 'content': content}
+
     def get(self, path):
-        if path == '/':
-            return {'content_type': 'application/json',
-                    'content': dumps(self.resources.keys())}
-        else:
-            try:
-                return self.resources[path]
-            except KeyError:
-                return None
+        if path in self.resources:
+            return self.resources[path]
+        if path.endswith('index.html'):
+            return {'content_type': 'text/html',
+                    'content': html_index(sub('index\.html$', '', path))}
+        return None
+
+    def all_paths(self):
+        return self.resources.keys()
+
+def html_index(root):
+    paths = sorted(resources.all_paths())
+    links = [LINK_TEMPLATE % (p,p) for p in paths if p.startswith(root)]
+    return INDEX_TEMPLATE % (root, root, '\n'.join(links))
 
 class HTTPServerWithResources(HTTPServer):
     def __init__(self, server_address, RequestHandlerClass, resources):
