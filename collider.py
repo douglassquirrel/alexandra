@@ -10,7 +10,7 @@ def add_collisions(movement, alex):
 def collisions(movement, entities_dict):
     entities = entities_dict.values()
     detector = make_collision_detector(movement, alex)
-    return filter(lambda(x): x is not None, map(detector, entities))
+    return filter(None, [detector(e) for e in entities])
 
 def make_collision_detector(movement, alex):
     moving_entity = movement['entity']
