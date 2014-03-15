@@ -16,8 +16,8 @@ function run {
     sleep $PAUSE_SEC
 }
 
-COMMANDS=( "library.py" "collider.py" "umpire.py" "world.py" "client.py" \
-           "walls.py" "player.py" )
+COMMANDS=( "library.py" "message_doc.py" "collider.py" "umpire.py" \
+           "world.py" "client.py" "walls.py" "player.py" )
 
 for c in "${COMMANDS[@]}"
 do

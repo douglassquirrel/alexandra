@@ -7,8 +7,9 @@ HEIGHT = 50
 DELTAS = {'left': (-5, 0), 'right': (5, 0), 'up': (0, -5), 'down': (0, 5)}
 
 def init(alex):
-    alex.enter_in_library(open(IMAGE_FILE).read(),
-                          '/player/player.png', 'image/png')
+    with open(IMAGE_FILE) as image_file:
+        alex.enter_in_library(image_file.read(),
+                              '/player/player.png', 'image/png')
     alex.enter_in_library(dumps({'width': WIDTH, 'height': HEIGHT}),
                           '/player/player.json', 'application/json')
     return alex.subscribe('commands.player')
