@@ -98,7 +98,8 @@ def publish_url(host, port):
         sleep(1)
 
 resources = Resources()
-config_string = open(CONFIG_FILE).read()
+with open(CONFIG_FILE) as config_file:
+    config_string = config_file.read()
 config = loads(config_string)
 host, port = config['library_host'], config['library_port']
 resources.add(path='/config.json',

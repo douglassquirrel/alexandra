@@ -11,12 +11,14 @@ V_HEIGHT = 80
 CELL_WIDTH = 80
 
 def init(alex):
-    alex.enter_in_library(open(H_IMAGE_FILE).read(),
-                          '/wall_horizontal/' + H_IMAGE_FILE,
-                          'image/png')
-    alex.enter_in_library(open(V_IMAGE_FILE).read(),
-                          '/wall_vertical/' + V_IMAGE_FILE,
-                          'image/png')
+    with open(H_IMAGE_FILE) as h_image_file:
+        alex.enter_in_library(h_image_file.read(),
+                              '/wall_horizontal/' + H_IMAGE_FILE,
+                              'image/png')
+    with open(V_IMAGE_FILE) as v_image_file:
+        alex.enter_in_library(v_image_file.read(),
+                              '/wall_vertical/' + V_IMAGE_FILE,
+                              'image/png')
     alex.enter_in_library(dumps({'width': H_WIDTH, 'height': H_HEIGHT}),
                           '/wall_horizontal/wall_horizontal.json',
                           'application/json')
