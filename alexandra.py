@@ -2,7 +2,7 @@ from json import dumps, load, loads
 from pubsub import create_channel, publish, subscribe, unsubscribe, \
                    get_message, get_all_messages, get_message_block
 from time import sleep
-from urllib2 import build_opener, HTTPHandler, Request, urlopen
+from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
 class Queue:
     def __init__(self, channel, topic, subscribe_world, alex):
@@ -59,12 +59,28 @@ class Alexandra:
 
     def get_library_file(self, path):
         if path not in self._library_files:
-            url = self._library_url + path
-            self._library_files[path] = {'data': urlopen(url).read()}
+            self._fetch_library_file_to_cache(path)
+            if path not in self._library_files:
+                return None
         return self._library_files[path]['data']
 
+    def _fetch_library_file_to_cache(self, path):
+        url = self._library_url + path
+        try:
+            f = urlopen(url)
+        except URLError:
+            return
+        self._library_files[path] = {'data': f.read()}
+
+    def is_in_library(self, path):
+        return self.get_library_file(path) is not None
+
     def publish(self, topic, message):
-        publish(self._channel, topic, dumps(message))
+        main_topic = topic.split('.')[0]
+        if self.is_in_library('/messages/%s.json' % main_topic):
+            publish(self._channel, topic, dumps(message))
+        else:
+            print "Refused to publish %s, no documentation" % topic
 
     def subscribe(self, topic):
         return Queue(self._channel, topic, self._subscribe_world, self)
