@@ -108,8 +108,6 @@ def publish_url(host, port):
         publish(channel=channel, label='library_url', message=url)
         sleep(1)
 
-    print 'Child exiting'
-
 resources = Resources()
 with open(CONFIG_FILE) as config_file:
     config_string = config_file.read()
