@@ -6,7 +6,7 @@ from shutil import copy, copytree
 from subprocess import call
 from tempfile import mkdtemp
 
-CONFIG_COMPONENTS = ['library', 'bootstrap']
+CONFIG_COMPONENTS = ['bootstrap', 'library', 'library_advertiser']
 
 def full_path_listdir(d):
     return [pathjoin(d, name) for name in listdir(d)]
