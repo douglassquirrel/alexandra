@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from json import dumps, loads
+from json import dumps, load
 from os import fork
 from pubsub import create_channel, publish
 from re import sub
@@ -40,16 +40,16 @@ class Resources:
             return self.resources[path]
         if path.endswith('index.html'):
             return {'content_type': 'text/html',
-                    'content': html_index(sub('index\.html$', '', path))}
+                    'content': self.html_index(sub('index\.html$', '', path))}
         return None
 
     def all_paths(self):
         return self.resources.keys()
 
-def html_index(root):
-    paths = sorted(resources.all_paths())
-    links = [LINK_TEMPLATE % (p,p) for p in paths if p.startswith(root)]
-    return INDEX_TEMPLATE % (root, root, '\n'.join(links))
+    def html_index(self, root):
+        paths = sorted(self.all_paths())
+        links = [LINK_TEMPLATE % (p,p) for p in paths if p.startswith(root)]
+        return INDEX_TEMPLATE % (root, root, '\n'.join(links))
 
 class HTTPServerWithResources(HTTPServer):
     def __init__(self, server_address, RequestHandlerClass, resources):
@@ -108,16 +108,11 @@ def publish_url(host, port):
         publish(channel=channel, label='library_url', message=url)
         sleep(1)
 
-resources = Resources()
 with open(CONFIG_FILE) as config_file:
-    config_string = config_file.read()
-config = loads(config_string)
-host, port = config['library_host'], config['library_port']
-resources.add(path='/config.json',
-              content_type='application/json',
-              content=config_string)
+    config = load(config_file)
+    host, port = config['library_host'], config['library_port']
 pid = fork()
 if pid > 0:
-    run_server(host, port, resources)
+    run_server(host, port, Resources())
 else:
     publish_url(host, port)

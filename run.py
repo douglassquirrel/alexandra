@@ -8,8 +8,9 @@ from subprocess import Popen
 from tempfile import mkdtemp
 from time import sleep
 
-COMPONENTS = ['library', 'message_doc', 'collider', 'umpire',
+COMPONENTS = ['library', 'bootstrap', 'collider', 'umpire',
               'world', 'client', 'walls', 'player']
+CONFIG_COMPONENTS = ['library', 'bootstrap']
 PAUSE_SEC = 1
 
 def full_path_listdir(d):
@@ -18,10 +19,15 @@ def full_path_listdir(d):
 def copy_libraries_to(dest_dir):
     map(lambda(p): copy(p, dest_dir), full_path_listdir('libraries'))
 
+def copy_config_to(dest_dir):
+    copy('config.json', dest_dir)
+
 def install_components(install_dir):
     installed_components_dir = pathjoin(install_dir, 'components')
     copytree('components', installed_components_dir)
     map(copy_libraries_to, full_path_listdir(installed_components_dir))
+    map(lambda(c): copy_config_to(pathjoin(installed_components_dir, c)),
+        CONFIG_COMPONENTS)
 
 def is_executable_file(f):
     return isfile(f) and access(f, X_OK)

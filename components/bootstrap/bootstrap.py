@@ -26,12 +26,15 @@ DOC_TEMPLATE = '''
 </html>
 '''
 
-def add_message_doc(filename):
+def add_message_doc(filename, alex):
     path = pathjoin(MESSAGES_FOLDER, filename)
     with open(path, 'r') as json_file:
         message_info = load(json_file)
         html = DOC_TEMPLATE % message_info
         alex.enter_in_library(html, '/messages/' + filename, 'text/html')
 
-alex = Alexandra()
-map(add_message_doc, listdir(MESSAGES_FOLDER))
+alex = Alexandra(fetch_config=False)
+map(lambda(d): add_message_doc(d, alex), listdir(MESSAGES_FOLDER))
+with open('config.json', 'r') as config_file:
+    config_data = config_file.read()
+    alex.enter_in_library(config_data, '/config.json', 'application/json')

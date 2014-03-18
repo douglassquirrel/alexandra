@@ -24,11 +24,12 @@ class Queue:
         return map(loads, get_all_messages(self._channel, self._q))
 
 class Alexandra:
-    def __init__(self, subscribe_world=False):
+    def __init__(self, subscribe_world=False, fetch_config=True):
         self._channel = create_channel()
         self._library_url = self._get_library_url()
         self._library_files = {}
-        self.config = self._get_config()
+        if fetch_config is True:
+            self.config = self._get_config()
         self._subscribe_world = subscribe_world
         self._each_tick = []
         self._world_queue = None
