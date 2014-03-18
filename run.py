@@ -3,7 +3,6 @@
 from os import access, listdir, X_OK
 from os.path import isfile, join as pathjoin
 from shutil import copy, copytree
-from signal import SIGKILL
 from subprocess import Popen
 from tempfile import mkdtemp
 
