@@ -41,8 +41,11 @@ def orientation(wall):
     else:
         return 'vertical'
 
-def main_loop(alex):
-    alex.wait()
+def draw_if_absent(walls, alex):
+    walls_in_world = filter(lambda(e): e.startswith('wall_'),
+                            alex.world['entities'].keys())
+    if len(walls_in_world) == 0:
+        draw_maze(walls, alex)
 
 def send_movement(position, orientation, index, alex):
     entity = 'wall_%s' % orientation
@@ -55,5 +58,5 @@ alex = Alexandra()
 init(alex)
 walls = make_maze(alex.config['field_width']/CELL_WIDTH,
                   alex.config['field_height']/CELL_WIDTH)
-draw_maze(walls, alex)
-main_loop(alex)
+alex.on_each_tick(lambda(x): draw_if_absent(walls, x))
+alex.wait()

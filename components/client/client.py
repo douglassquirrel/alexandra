@@ -53,5 +53,5 @@ def do_entity_update(entity_data, window, alex):
 
 alex = Alexandra()
 window = init_window(alex.config['field_width'], alex.config['field_height'])
-alex.on_each_tick(lambda(x): update(window, x))
+alex.on_each_tick(lambda(a): update(window, a))
 alex.wait()
