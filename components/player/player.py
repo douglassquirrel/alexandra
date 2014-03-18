@@ -4,8 +4,8 @@ from alexandra import Alexandra
 from json import dumps
 
 IMAGE_FILE = 'player.png'
-WIDTH = 50
-HEIGHT = 50
+WIDTH = 20
+HEIGHT = 20
 DELTAS = {'left': (-5, 0), 'right': (5, 0), 'up': (0, -5), 'down': (0, 5)}
 
 def init(alex):
