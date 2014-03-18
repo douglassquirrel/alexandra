@@ -29,7 +29,7 @@ class Alexandra:
         self._library_url = self._get_library_url()
         self._library_files = {}
         if fetch_config is True:
-            self.config = self._get_config()
+            self._wait_for_config()
         self._subscribe_world = subscribe_world
         self._each_tick = []
         self._world_queue = None
@@ -111,5 +111,8 @@ class Alexandra:
         unsubscribe(self._channel, library_url_queue, 'library_url')
         return library_url
 
-    def _get_config(self):
-        return loads(self.get_library_file('/config.json'))
+    def _wait_for_config(self):
+        config_file = None
+        while config_file is None:
+            config_file = self.get_library_file('/config.json')
+        self.config = loads(config_file)

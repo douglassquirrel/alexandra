@@ -6,12 +6,13 @@ from shutil import copy, copytree
 from signal import SIGKILL
 from subprocess import Popen
 from tempfile import mkdtemp
-from time import sleep
 
 COMPONENTS = ['library', 'bootstrap', 'collider', 'umpire',
               'world', 'client', 'walls', 'player']
 CONFIG_COMPONENTS = ['library', 'bootstrap']
-PAUSE_SEC = 1
+
+from random import shuffle
+shuffle(COMPONENTS)
 
 def full_path_listdir(d):
     return [pathjoin(d, name) for name in listdir(d)]
@@ -37,7 +38,6 @@ def start_component(component_name, run_dir):
     executable = filter(is_executable_file, full_path_listdir(component_dir))[0]
     print "Executing %s" % (executable,)
     process = Popen(executable, cwd=component_dir)
-    sleep(PAUSE_SEC)
     return process
 
 install_dir = mkdtemp(prefix='alexandra.')
