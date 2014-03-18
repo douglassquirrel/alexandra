@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 from alexandra import Alexandra
 from json import dumps
 from maze import make_maze

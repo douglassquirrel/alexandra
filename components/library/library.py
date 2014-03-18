@@ -1,9 +1,13 @@
+#! /usr/bin/python
+
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import dumps, loads
 from os import fork
 from pubsub import create_channel, publish
 from re import sub
+from signal import SIGKILL, signal
 from time import sleep
+from urllib2 import URLError, urlopen
 
 CONFIG_FILE = 'config.json'
 INDEX_TEMPLATE = '''
@@ -89,13 +93,22 @@ def run_server(host, port, resources):
     server = HTTPServerWithResources((host, port), LibraryHandler, resources)
     server.serve_forever()
 
+def is_responsive(url):
+    try:
+        urlopen(url).read()
+        return True
+    except URLError:
+        return False
+
 def publish_url(host, port):
     channel = create_channel()
     url = 'http://%s:%d' % (host, port)
 
-    while True:
+    while is_responsive(url + '/index.html'):
         publish(channel=channel, label='library_url', message=url)
         sleep(1)
+
+    print 'Child exiting'
 
 resources = Resources()
 with open(CONFIG_FILE) as config_file:

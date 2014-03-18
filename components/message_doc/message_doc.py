@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 from alexandra import Alexandra
 from json import load
 from os import listdir

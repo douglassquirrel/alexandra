@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 from alexandra import Alexandra
 from json import dumps
 from pygame import display, event, init, key, quit

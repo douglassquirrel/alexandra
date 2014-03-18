@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 from alexandra import Alexandra
 from time import sleep
 
