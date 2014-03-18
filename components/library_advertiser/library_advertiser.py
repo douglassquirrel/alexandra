@@ -2,10 +2,9 @@
 
 from json import load
 from pubsub import create_channel, publish
+from sys import argv
 from time import sleep
 from urllib2 import URLError, urlopen
-
-CONFIG_FILE = 'config.json'
 
 def is_responsive(url):
     try:
@@ -22,7 +21,8 @@ def publish_url(host, port):
         publish(channel=channel, label='library_url', message=url)
         sleep(1)
 
-with open(CONFIG_FILE) as config_file:
+config_file_path = argv[1]
+with open(config_file_path, 'r') as config_file:
     config = load(config_file)
 host, port = config['library_host'], config['library_port']
 publish_url(host, port)

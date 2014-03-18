@@ -4,6 +4,7 @@ from alexandra import Alexandra
 from json import load
 from os import listdir
 from os.path import join as pathjoin
+from sys import argv
 
 MESSAGES_FOLDER = 'messages'
 DOC_TEMPLATE = '''
@@ -35,6 +36,7 @@ def add_message_doc(filename, alex):
 
 alex = Alexandra(fetch_config=False)
 map(lambda(d): add_message_doc(d, alex), listdir(MESSAGES_FOLDER))
-with open('config.json', 'r') as config_file:
+config_file_path = argv[1]
+with open(config_file_path, 'r') as config_file:
     config_data = config_file.read()
     alex.enter_in_library(config_data, '/config.json', 'application/json')

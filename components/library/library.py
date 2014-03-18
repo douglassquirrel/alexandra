@@ -3,8 +3,8 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import load
 from re import sub
+from sys import argv
 
-CONFIG_FILE = 'config.json'
 INDEX_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="en">
@@ -88,7 +88,8 @@ def run_server(host, port, resources):
     server = HTTPServerWithResources((host, port), LibraryHandler, resources)
     server.serve_forever()
 
-with open(CONFIG_FILE) as config_file:
+config_file_path = argv[1]
+with open(config_file_path, 'r') as config_file:
     config = load(config_file)
 host, port = config['library_host'], config['library_port']
 run_server(host, port, Resources())
