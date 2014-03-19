@@ -3,5 +3,15 @@
 "field_height": 643,
 "player_start_x": 10,
 "player_start_y": 10,
-"tick_seconds": 0.02
+"tick_seconds": 0.02,
+"components": {"bootstrap": 1,
+               "client": 1,
+               "collider": 1,
+               "library": 1,
+               "library_advertiser": 1,
+               "opponent_random": 1,
+               "player": 1,
+               "umpire": 1,
+               "walls": 1,
+               "world": 1}
 }
