@@ -7,7 +7,7 @@ def filter_movement(movement, alex):
     entity = movement['entity']
     from_position, to_position = movement['from'], movement['to']
 
-    if entity != 'player' or len(movement['collisions']) == 0:
+    if entity.startswith('wall') or len(movement['collisions']) == 0:
         new_position = to_position
     else:
         new_position = from_position
