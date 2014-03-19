@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-from os import access, listdir, X_OK
+from os import access, getcwd, listdir, X_OK
 from os.path import abspath, isfile, join as pathjoin
 from subprocess import Popen
 
@@ -14,7 +14,7 @@ def start_component(component_name):
     component_dir = abspath(pathjoin('components', component_name))
     executable = filter(is_executable_file, abspath_listdir(component_dir))[0]
     print "Executing %s" % (executable,)
-    process = Popen([executable, abspath('config.json')], cwd=component_dir)
+    process = Popen([executable, abspath(getcwd())], cwd=component_dir)
     return process
 
 processes = map(start_component, listdir('components'))

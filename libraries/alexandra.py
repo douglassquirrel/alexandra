@@ -24,12 +24,12 @@ class Queue:
         return map(loads, get_all_messages(self._channel, self._q))
 
 class Alexandra:
-    def __init__(self, subscribe_world=False, fetch_config=True):
+    def __init__(self, subscribe_world=False, fetch_game_config=True):
         self._channel = create_channel()
         self._library_url = self._get_library_url()
         self._library_files = {}
-        if fetch_config is True:
-            self._wait_for_config()
+        if fetch_game_config is True:
+            self._wait_for_game_config()
         self._subscribe_world = subscribe_world
         self._each_tick = []
         self._world_queue = None
@@ -111,8 +111,8 @@ class Alexandra:
         unsubscribe(self._channel, library_url_queue, 'library_url')
         return library_url
 
-    def _wait_for_config(self):
+    def _wait_for_game_config(self):
         config_file = None
         while config_file is None:
-            config_file = self.get_library_file('/config.json')
+            config_file = self.get_library_file('/game.json')
         self.config = loads(config_file)

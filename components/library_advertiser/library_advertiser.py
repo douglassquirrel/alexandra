@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 from json import load
+from os.path import join as pathjoin
 from pubsub import create_channel, publish
 from sys import argv
 from time import sleep
@@ -21,7 +22,8 @@ def publish_url(host, port):
         publish(channel=channel, label='library_url', message=url)
         sleep(1)
 
-config_file_path = argv[1]
+config_dir = argv[1]
+config_file_path = pathjoin(config_dir, 'infra.json')
 with open(config_file_path, 'r') as config_file:
     config = load(config_file)
 host, port = config['library_host'], config['library_port']

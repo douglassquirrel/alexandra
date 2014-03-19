@@ -2,6 +2,7 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import load
+from os.path import join as pathjoin
 from re import sub
 from sys import argv
 
@@ -88,7 +89,8 @@ def run_server(host, port, resources):
     server = HTTPServerWithResources((host, port), LibraryHandler, resources)
     server.serve_forever()
 
-config_file_path = argv[1]
+config_dir = argv[1]
+config_file_path = pathjoin(config_dir, 'infra.json')
 with open(config_file_path, 'r') as config_file:
     config = load(config_file)
 host, port = config['library_host'], config['library_port']
