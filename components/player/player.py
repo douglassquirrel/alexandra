@@ -3,16 +3,14 @@
 from alexandra import Alexandra
 from json import dumps
 
-IMAGE_FILE = 'player.png'
 WIDTH = 20
 HEIGHT = 20
+COLOUR = [0, 255, 255]
 DELTAS = {'left': (-5, 0), 'right': (5, 0), 'up': (0, -5), 'down': (0, 5)}
 
 def init(alex):
-    with open(IMAGE_FILE) as image_file:
-        alex.enter_in_library(image_file.read(),
-                              '/player/player.png', 'image/png')
-    alex.enter_in_library(dumps({'width': WIDTH, 'height': HEIGHT}),
+    entity_data = {'width': WIDTH, 'height': HEIGHT, 'colour': COLOUR}
+    alex.enter_in_library(dumps(entity_data),
                           '/player/player.json', 'application/json')
     return alex.subscribe('commands.player')
 

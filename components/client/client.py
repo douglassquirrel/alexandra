@@ -1,9 +1,8 @@
 #! /usr/bin/python
 
 from alexandra import Alexandra
-from json import dumps
-from pygame import display, event, init, key, quit
-from pygame.image import load
+from json import loads
+from pygame import display, event, init, key, quit, Surface, surfarray
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
 from StringIO import StringIO
 from sys import exit
@@ -47,9 +46,18 @@ def do_world_update(window, alex):
 
 def do_entity_update(entity_data, window, alex):
     entity, position = entity_data['entity'], entity_data['position']
-    image_path = '/%s/%s.png' % (entity, entity)
-    image = load(StringIO(alex.get_library_file(image_path)))
-    window.blit(image, position)
+    entity_data = loads(alex.get_library_file('/%s/%s.json' % (entity, entity)))
+    width, height = entity_data['width'], entity_data['height']
+    colour = list(entity_data['colour'])
+    draw_rectangle(width, height, colour, position, window)
+
+def draw_rectangle(width, height, colour, position, window):
+    rectangle = Surface((width, height))
+    pixels = surfarray.pixels3d(rectangle)
+    pixels[:][:] = colour
+    del pixels
+    rectangle.unlock()
+    window.blit(rectangle, position)
 
 alex = Alexandra()
 window = init_window(alex.config['field_width'], alex.config['field_height'])

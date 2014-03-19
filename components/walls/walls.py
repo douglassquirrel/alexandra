@@ -4,27 +4,20 @@ from alexandra import Alexandra
 from json import dumps
 from maze import make_maze
 
-H_IMAGE_FILE = 'wall_horizontal.png'
 H_WIDTH = 80
 H_HEIGHT = 3
-V_IMAGE_FILE = 'wall_vertical.png'
 V_WIDTH = 3
 V_HEIGHT = 80
+COLOUR = [0, 50, 200]
 CELL_WIDTH = 80
 
 def init(alex):
-    with open(H_IMAGE_FILE) as h_image_file:
-        alex.enter_in_library(h_image_file.read(),
-                              '/wall_horizontal/' + H_IMAGE_FILE,
-                              'image/png')
-    with open(V_IMAGE_FILE) as v_image_file:
-        alex.enter_in_library(v_image_file.read(),
-                              '/wall_vertical/' + V_IMAGE_FILE,
-                              'image/png')
-    alex.enter_in_library(dumps({'width': H_WIDTH, 'height': H_HEIGHT}),
+    alex.enter_in_library(dumps({'width': H_WIDTH, 'height': H_HEIGHT,
+                                 'colour': COLOUR}),
                           '/wall_horizontal/wall_horizontal.json',
                           'application/json')
-    alex.enter_in_library(dumps({'width': V_WIDTH, 'height': V_HEIGHT}),
+    alex.enter_in_library(dumps({'width': V_WIDTH, 'height': V_HEIGHT,
+                                 'colour': COLOUR}),
                           '/wall_vertical/wall_vertical.json',
                           'application/json')
 
