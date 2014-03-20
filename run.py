@@ -31,5 +31,6 @@ components = game_data['components']
 processes = flatten(map(lambda(c): start_component_group(*c),
                         components.items()))
 print 'Now running'
-raw_input('Press Enter to stop')
+print 'Press Space in game window to start'
+raw_input('Press Enter in this window to stop\n')
 map(lambda(p): p.kill(), processes)

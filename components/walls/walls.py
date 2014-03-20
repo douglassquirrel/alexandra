@@ -49,6 +49,7 @@ def send_movement(position, orientation, index, alex):
 
 alex = Alexandra()
 init(alex)
+alex.wait_for_start()
 walls = make_maze(alex.config['field_width']/CELL_WIDTH,
                   alex.config['field_height']/CELL_WIDTH)
 alex.on_each_tick(lambda(x): draw_if_absent(walls, x))

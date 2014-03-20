@@ -45,5 +45,6 @@ def send_movement(from_position, to_position, alex):
 
 alex = Alexandra(subscribe_world=True)
 init(alex)
+alex.wait_for_start()
 alex.on_each_tick(move)
 alex.wait()
