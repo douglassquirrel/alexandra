@@ -2,7 +2,10 @@
 
 from alexandra import Alexandra
 from json import dumps
+from sys import argv
 
+INDEX = int(argv[2])
+NAME = 'player_%d' % (INDEX,)
 WIDTH = 20
 HEIGHT = 20
 COLOUR = [0, 255, 255]
@@ -15,15 +18,15 @@ def init(alex):
     return alex.subscribe('commands.player')
 
 def start_if_not_present(alex):
-    if 'player_0' not in alex.world['entities']:
+    if NAME not in alex.world['entities']:
         position = (alex.config['player_start_x'],
                     alex.config['player_start_y'])
         send_movement(position, position, alex)
 
 def move(command, alex):
-    if 'player_0' not in alex.world['entities']:
+    if NAME not in alex.world['entities']:
         return
-    position = alex.world['entities']['player_0']['position']
+    position = alex.world['entities'][NAME]['position']
     new_position = apply_command(command, position)
     send_movement(position, new_position, alex)
 
@@ -32,7 +35,7 @@ def apply_command(command, position):
     return (position[0] + delta[0], position[1] + delta[1])
 
 def send_movement(from_position, to_position, alex):
-    movement = {'entity': 'player', 'index': 0,
+    movement = {'entity': 'player', 'index': INDEX,
                 'from': from_position, 'to': to_position}
     alex.publish('movement.player', movement)
 
