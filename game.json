@@ -3,7 +3,7 @@
 "field_height": 643,
 "player_start_x": 10,
 "player_start_y": 10,
-"tick_seconds": 0.1,
+"tick_seconds": 0.02,
 "components": {"bootstrap": 1,
                "client": 1,
                "collider": 1,

@@ -1,7 +1,0 @@
-{
-"name": "start",
-"extensions": "none",
-"content": "Integer",
-"meaning": "Signals start of game; content gives zero-based index of the iteration (first game played is 0, second is 1, ....)",
-"example": "start -> 0"
-}

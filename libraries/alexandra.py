@@ -44,11 +44,6 @@ class Alexandra:
         while True:
             self.next_tick()
 
-    def wait_for_start(self):
-        start_queue = self.subscribe('start')
-        while start_queue.next() is None:
-            pass
-
     def monitor(self, queue, f):
         while True:
             message = queue.next()
@@ -86,7 +81,7 @@ class Alexandra:
         if self.is_in_library('/messages/%s.json' % main_topic):
             publish(self._channel, topic, dumps(message))
         else:
-            print 'Refused to publish %s, no documentation' % topic
+            print "Refused to publish %s, no documentation" % topic
 
     def subscribe(self, topic):
         return Queue(self._channel, topic, self._subscribe_world, self)

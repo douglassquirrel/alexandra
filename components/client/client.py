@@ -3,25 +3,20 @@
 from alexandra import Alexandra
 from json import loads
 from pygame import display, event, init, key, quit, Surface, surfarray
-from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, K_SPACE, QUIT
+from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
 from StringIO import StringIO
 from sys import exit
-from time import sleep
-
-BACKGROUND_COLOUR = (0, 0, 0)
 
 def init_window(field_width, field_height):
     init()
     window = display.set_mode((field_width, field_height), 0)
     display.set_caption('Alexandra')
-    window.fill(BACKGROUND_COLOUR)
-    display.flip()
     return window
 
 def update(window, alex):
     do_world_update(window, alex)
     command = get_command()
-    if command is not None and command != 'start':
+    if command is not None:
         alex.publish('commands.player', command)
     check_quit()
 
@@ -30,11 +25,10 @@ def check_quit():
         quit()
         exit()
 
-command_dict = {K_DOWN: 'down', K_LEFT: 'left', K_RIGHT: 'right', K_UP: 'up',
-                K_SPACE: 'start'}
+command_dict = {K_DOWN: 'down', K_LEFT: 'left', K_RIGHT: 'right', K_UP: 'up'}
 known_keys = set(command_dict.keys())
 def get_command():
-    key_states = list(enumerate(key.get_pressed()))
+    key_states = enumerate(key.get_pressed())
     pressed_keys = set([x for (x,y) in key_states if y != 0])
     known_pressed_keys = pressed_keys.intersection(known_keys)
     if len(known_pressed_keys) > 0:
@@ -43,8 +37,9 @@ def get_command():
     else:
         return None
 
+BLACK = (0, 0, 0)
 def do_world_update(window, alex):
-    window.fill(BACKGROUND_COLOUR)
+    window.fill(BLACK)
     updater = lambda(e): do_entity_update(e, window, alex)
     map(updater, alex.world['entities'].values())
     display.flip()
@@ -66,10 +61,5 @@ def draw_rectangle(width, height, colour, position, window):
 
 alex = Alexandra()
 window = init_window(alex.config['field_width'], alex.config['field_height'])
-while get_command() != 'start':
-    event.get()
-    sleep(0.1)
-print 'client starting'
-alex.publish('start', 0)
 alex.on_each_tick(lambda(a): update(window, a))
 alex.wait()
