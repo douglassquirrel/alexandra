@@ -24,6 +24,13 @@ def subscribe(channel, label):
 def unsubscribe(channel, queue, label):
     channel.queue_unbind(exchange=EXCHANGE_NAME, queue=queue, routing_key=label)
 
+def consume(channel, queue, f):
+    def callback(ch, method, properties, body):
+        f(body)
+
+    channel.basic_consume(callback, queue=queue, no_ack=True)
+    channel.start_consuming()
+
 def get_message(channel, queue):
     return channel.basic_get(0, queue=queue, no_ack=True)[2]
 

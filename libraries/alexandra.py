@@ -1,11 +1,11 @@
 from json import dumps, load, loads
-from pubsub import create_channel, publish, subscribe, unsubscribe, \
+from pubsub import create_channel, consume, publish, subscribe, unsubscribe, \
                    get_message, get_all_messages, get_message_block
 from time import sleep
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
 class Queue:
-    def __init__(self, channel, topic, subscribe_world, alex):
+    def __init__(self, channel, topic, alex, subscribe_world=False):
         self._channel = channel
         self._q = subscribe(self._channel, topic)
         self._subscribe_world = subscribe_world
@@ -22,6 +22,12 @@ class Queue:
 
     def fetch_all(self):
         return map(loads, get_all_messages(self._channel, self._q))
+
+    def consume(self, f):
+        def callback(message):
+            #print "in Queue callback with message %s" % (message,)
+            return f(loads(message), self._alex)
+        consume(self._channel, self._q, callback)
 
 class Alexandra:
     def __init__(self, subscribe_world=False, fetch_game_config=True):
@@ -50,6 +56,10 @@ class Alexandra:
             if message is not None:
                 f(message, self)
             sleep(self.config['tick_seconds']/5)
+
+    def each_tick(self, f):
+        tick_queue = Queue(self._channel, 'tick', self)
+        tick_queue.consume(f)
 
     def enter_in_library(self, data, path, content_type):
         opener = build_opener(HTTPHandler)
@@ -84,7 +94,7 @@ class Alexandra:
             print "Refused to publish %s, no documentation" % topic
 
     def subscribe(self, topic):
-        return Queue(self._channel, topic, self._subscribe_world, self)
+        return Queue(self._channel, topic, self, self._subscribe_world)
 
     def next_world(self):
         if self._world_queue is None:
