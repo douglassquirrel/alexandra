@@ -7,7 +7,7 @@ world = {'tick': 0, 'movements': {}, 'entities': {}}
 movement_queue = alex.subscribe('decision_movement.*')
 
 def publish_world(tick, alex):
-    world['tick'] += 1
+    world['tick'] = tick
     world['movements'] = {}
     for m in movement_queue.fetch_all():
         entity, index, position = m['entity'], m['index'], m['to']
