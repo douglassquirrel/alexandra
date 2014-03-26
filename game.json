@@ -12,6 +12,6 @@
                "opponent_random": 2,
                "player": 1,
                "umpire": 1,
-               "walls": 1,
+               "walls": 0,
                "world": 1}
 }
