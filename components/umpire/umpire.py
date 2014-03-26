@@ -1,7 +1,6 @@
 #! /usr/bin/python
 
 from alexandra import Alexandra
-from time import sleep
 
 def check_movement(movement, alex):
     return movement['to'][0] >= 0 \

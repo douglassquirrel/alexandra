@@ -6,6 +6,7 @@
 "tick_seconds": 0.02,
 "components": {"bootstrap": 1,
                "client": 1,
+               "clock": 1,
                "collider": 1,
                "library": 1,
                "library_advertiser": 1,

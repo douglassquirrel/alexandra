@@ -17,7 +17,7 @@ def is_executable_file(f):
 def start_component(component_name, index):
     component_dir = abspath(pathjoin('components', component_name))
     executable = filter(is_executable_file, abspath_listdir(component_dir))[0]
-    print "Executing %s number %d" % (executable, index)
+    print 'Executing %s number %d' % (executable, index)
     process = Popen([executable, abspath(getcwd()), str(index)],
                     cwd=component_dir)
     return process
