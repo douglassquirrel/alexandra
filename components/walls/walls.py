@@ -51,5 +51,5 @@ alex = Alexandra()
 init(alex)
 walls = make_maze(alex.config['field_width']/CELL_WIDTH,
                   alex.config['field_height']/CELL_WIDTH)
-alex.on_each_tick(lambda(x): draw_if_absent(walls, x))
+alex.on_each_world(lambda(x): draw_if_absent(walls, x))
 alex.wait()

@@ -40,6 +40,6 @@ def send_movement(from_position, to_position, alex):
     alex.publish('movement.player', movement)
 
 alex = Alexandra(subscribe_world=True)
-alex.on_each_tick(start_if_not_present)
+alex.on_each_world(start_if_not_present)
 commands_queue = init(alex)
 alex.monitor(commands_queue, move)
