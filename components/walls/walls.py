@@ -43,7 +43,8 @@ def draw_if_absent(walls, alex):
 def send_movement(position, orientation, index, alex):
     entity = 'wall_%s' % orientation
     name = '%s_%d' % (entity, index,)
-    movement = {'entity': entity, 'index': index,
+    movement = {'tick': alex.world['tick'],
+                'entity': entity, 'index': index,
                 'from': position, 'to': position}
     alex.publish('movement.' + name, movement)
 

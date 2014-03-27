@@ -35,7 +35,8 @@ def apply_command(command, position):
     return (position[0] + delta[0], position[1] + delta[1])
 
 def send_movement(from_position, to_position, alex):
-    movement = {'entity': 'player', 'index': INDEX,
+    movement = {'tick': alex.world['tick'],
+                'entity': 'player', 'index': INDEX,
                 'from': from_position, 'to': to_position}
     alex.publish('movement.player', movement)
 

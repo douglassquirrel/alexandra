@@ -39,7 +39,8 @@ def move(alex):
     send_movement(position, new_position, alex)
 
 def send_movement(from_position, to_position, alex):
-    movement = {'entity': 'opponent_random', 'index': INDEX,
+    movement = {'tick': alex.world['tick'],
+                'entity': 'opponent_random', 'index': INDEX,
                 'from': from_position, 'to': to_position}
     alex.publish('movement.player', movement)
 
