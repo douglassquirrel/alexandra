@@ -1,6 +1,7 @@
 from json import dumps, load, loads
 from pubsub import create_channel, consume, publish, subscribe, unsubscribe, \
-                   get_message, get_all_messages, get_message_block
+                   get_message, get_all_messages, get_message_block, \
+                   QueueMonitor
 from time import sleep
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
@@ -29,6 +30,14 @@ class Queue:
             return f(loads(message), self._alex)
         consume(self._channel, self._q, callback)
 
+class WorldMonitor:
+    def __init__(self, channel):
+        queue = subscribe(channel, 'world')
+        self._monitor = QueueMonitor(channel, queue)
+
+    def latest(self):
+        return loads(self._monitor.latest())
+
 class Alexandra:
     def __init__(self, subscribe_world=False, fetch_game_config=True):
         self._channel = create_channel()
@@ -42,6 +51,9 @@ class Alexandra:
         self.world = None
         if self._subscribe_world is True:
             self.next_world()
+
+    def get_world_monitor(self):
+        return WorldMonitor(self._channel)
 
     def on_each_world(self, f):
         self._each_world.append(f)

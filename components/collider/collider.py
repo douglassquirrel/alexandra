@@ -4,8 +4,8 @@ from alexandra import Alexandra
 from json import loads
 from vector import Vector, Rect
 
-def add_collisions(movement, alex):
-    movement['collisions'] = collisions(movement, alex.world['entities'])
+def add_collisions(movement, world, alex):
+    movement['collisions'] = collisions(movement, world['entities'])
     alex.publish('movement_with_collisions.' + movement['entity'],
                  movement)
 
@@ -37,6 +37,8 @@ def get_dimensions(entity, library_url):
     data = loads(alex.get_library_file('/%s/%s.json' % (entity, entity)))
     return (data['width'], data['height'])
 
-alex = Alexandra(subscribe_world=True)
+alex = Alexandra()
+world_monitor = alex.get_world_monitor()
 movement_queue = alex.subscribe('movement.*')
-alex.monitor(movement_queue, add_collisions)
+alex.monitor(movement_queue,
+             lambda m, a: add_collisions(m, world_monitor.latest(), a))

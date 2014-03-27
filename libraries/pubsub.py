@@ -31,6 +31,18 @@ def consume(channel, queue, f):
     channel.basic_consume(callback, queue=queue, no_ack=True)
     channel.start_consuming()
 
+class QueueMonitor:
+    def __init__(self, channel, queue):
+        self._channel = channel
+        self._queue = queue
+        self._latest = None
+
+    def latest(self):
+        messages = get_all_messages(self._channel, self._queue)
+        if len(messages) > 0:
+            self._latest = messages[-1]
+        return self._latest
+
 def get_message(channel, queue):
     return channel.basic_get(0, queue=queue, no_ack=True)[2]
 
