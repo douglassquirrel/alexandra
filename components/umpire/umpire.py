@@ -19,7 +19,8 @@ def filter_movement(movement, alex):
     else:
         new_position = from_position
 
-    approved_movement = {'entity': entity,
+    approved_movement = {'tick': movement['tick'],
+                         'entity': entity,
                          'index': movement['index'],
                          'from': from_position, 'to': new_position}
     alex.publish('decision_movement.' + entity, approved_movement)

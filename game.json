@@ -10,7 +10,7 @@
                "collider": 1,
                "library": 1,
                "library_advertiser": 1,
-               "opponent_random": 2,
+               "opponent_random": 1,
                "player": 1,
                "umpire": 1,
                "walls": 0,
