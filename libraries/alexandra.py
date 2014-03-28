@@ -2,7 +2,6 @@ from json import dumps, load, loads
 from pubsub import create_channel, consume, publish, subscribe, unsubscribe, \
                    get_message, get_all_messages, get_message_block, \
                    QueueMonitor
-from time import sleep
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
 class Queue:
@@ -60,13 +59,6 @@ class Alexandra:
     def wait(self):
         while True:
             self.next_world()
-
-    def monitor(self, queue, f):
-        while True:
-            message = queue.next()
-            if message is not None:
-                f(message, self)
-            sleep(self.config['tick_seconds']/5)
 
     def consume(self, topic, f):
         queue = Queue(self._channel, topic, self)

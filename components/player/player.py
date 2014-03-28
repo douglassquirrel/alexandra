@@ -17,30 +17,31 @@ def init(alex):
                           '/player/player.json', 'application/json')
     return alex.subscribe('commands.player')
 
-def start_if_not_present(alex):
-    if NAME not in alex.world['entities']:
+def update(world, commands_queue, alex):
+    if NAME not in world['entities']:
         position = (alex.config['player_start_x'],
                     alex.config['player_start_y'])
-        send_movement(position, position, alex)
+        send_movement(position, position, world['tick'], alex)
+    else:
+        commands = commands_queue.fetch_all()
+        if len(commands) > 0:
+            move(commands[-1], world, alex)
 
-def move(command, alex):
-    if NAME not in alex.world['entities']:
-        return
-    position = alex.world['entities'][NAME]['position']
+def move(command, world, alex):
+    position = world['entities'][NAME]['position']
     new_position = apply_command(command, position)
-    send_movement(position, new_position, alex)
+    send_movement(position, new_position, world['tick'], alex)
 
 def apply_command(command, position):
     delta = DELTAS.get(command, (0, 0))
     return (position[0] + delta[0], position[1] + delta[1])
 
-def send_movement(from_position, to_position, alex):
-    movement = {'tick': alex.world['tick'],
+def send_movement(from_position, to_position, tick, alex):
+    movement = {'tick': tick,
                 'entity': 'player', 'index': INDEX,
                 'from': from_position, 'to': to_position}
     alex.publish('movement.player', movement)
 
 alex = Alexandra(subscribe_world=True)
-alex.on_each_world(start_if_not_present)
 commands_queue = init(alex)
-alex.monitor(commands_queue, move)
+alex.consume('world', lambda w, a: update(w, commands_queue, a))
