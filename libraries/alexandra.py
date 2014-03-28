@@ -72,10 +72,6 @@ class Alexandra:
         queue = Queue(self._channel, topic, self)
         queue.consume(f)
 
-    def each_tick(self, f):
-        tick_queue = Queue(self._channel, 'tick', self)
-        tick_queue.consume(f)
-
     def enter_in_library(self, data, path, content_type):
         opener = build_opener(HTTPHandler)
         request = Request(self._library_url + path, data)

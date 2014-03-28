@@ -20,4 +20,4 @@ def publish_world(tick, alex):
         world['movements'][name] = m
     alex.publish('world', world)
 
-alex.each_tick(publish_world)
+alex.consume('tick', publish_world)
