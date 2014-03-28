@@ -18,33 +18,32 @@ def init(alex):
                           '/opponent_random/opponent_random.json',
                           'application/json')
 
-def move(alex):
-    if NAME not in alex.world['entities']:
+def move(world, alex):
+    if NAME not in world['entities']:
         position = (alex.config['player_start_x'] + 80 * (INDEX + 1),
                     alex.config['player_start_y'])
-        send_movement(position, position, alex)
+        send_movement(position, position, world['tick'], alex)
         return
 
-    if NAME not in alex.world['movements']:
+    if NAME not in world['movements']:
         delta = randomchoice(DELTAS)
     else:
-        movement = alex.world['movements'][NAME]
+        movement = world['movements'][NAME]
         delta = (movement['to'][0] - movement['from'][0],
                  movement['to'][1] - movement['from'][1])
         if delta[0] == 0 and delta[1] == 0:
             delta = randomchoice(DELTAS)
 
-    position = alex.world['entities'][NAME]['position']
+    position = world['entities'][NAME]['position']
     new_position = (position[0] + delta[0], position[1] + delta[1])
-    send_movement(position, new_position, alex)
+    send_movement(position, new_position, world['tick'], alex)
 
-def send_movement(from_position, to_position, alex):
-    movement = {'tick': alex.world['tick'],
+def send_movement(from_position, to_position, tick, alex):
+    movement = {'tick': tick,
                 'entity': 'opponent_random', 'index': INDEX,
                 'from': from_position, 'to': to_position}
-    alex.publish('movement.player', movement)
+    alex.publish('movement.opponent_random', movement)
 
-alex = Alexandra(subscribe_world=True)
+alex = Alexandra()
 init(alex)
-alex.on_each_world(move)
-alex.wait()
+alex.consume('world', move)

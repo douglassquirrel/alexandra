@@ -13,8 +13,8 @@ def init_window(field_width, field_height):
     display.set_caption('Alexandra')
     return window
 
-def update(window, alex):
-    do_world_update(window, alex)
+def update(window, world, alex):
+    do_world_update(window, world, alex)
     command = get_command()
     if command is not None:
         alex.publish('commands.player', command)
@@ -38,10 +38,10 @@ def get_command():
         return None
 
 BLACK = (0, 0, 0)
-def do_world_update(window, alex):
+def do_world_update(window, world, alex):
     window.fill(BLACK)
     updater = lambda(e): do_entity_update(e, window, alex)
-    map(updater, alex.world['entities'].values())
+    map(updater, world['entities'].values())
     display.flip()
 
 def do_entity_update(entity_data, window, alex):
@@ -61,5 +61,4 @@ def draw_rectangle(width, height, colour, position, window):
 
 alex = Alexandra()
 window = init_window(alex.config['field_width'], alex.config['field_height'])
-alex.on_each_world(lambda(a): update(window, a))
-alex.wait()
+alex.consume('world', lambda w, a: update(window, w, a))
