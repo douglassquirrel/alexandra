@@ -21,9 +21,6 @@ def init(alex):
                           '/wall_vertical/wall_vertical.json',
                           'application/json')
 
-def draw_maze(walls, tick, alex):
-    map(lambda(x): draw_wall(x[0], x[1], tick, alex), enumerate(walls))
-
 def draw_wall(index, wall, tick, alex):
     position = (wall[0] * CELL_WIDTH, wall[1] * CELL_WIDTH)
     send_movement(position, orientation(wall), index, tick, alex)
@@ -34,11 +31,16 @@ def orientation(wall):
     else:
         return 'vertical'
 
-def draw_if_absent(walls, world, alex):
+def draw(walls, world, alex):
+    number_of_walls = len(walls)
     walls_in_world = filter(lambda(e): e.startswith('wall_'),
                             world['entities'].keys())
-    if len(walls_in_world) == 0:
-        draw_maze(walls, world['tick'], alex)
+    if len(walls_in_world) >= number_of_walls:
+        return
+    indexes_in_world = sorted(map(lambda(w): int(w.partition('al_')[2]),
+                                  walls_in_world))
+    index = [i for i in range(number_of_walls) if i not in indexes_in_world][0]
+    draw_wall(index, walls[index], world['tick'], alex)
 
 def send_movement(position, orientation, index, tick, alex):
     entity = 'wall_%s' % orientation
@@ -50,6 +52,6 @@ def send_movement(position, orientation, index, tick, alex):
 
 alex = Alexandra()
 init(alex)
-walls = make_maze(alex.config['field_width']/CELL_WIDTH,
-                  alex.config['field_height']/CELL_WIDTH)
-alex.consume('world', lambda w, a: draw_if_absent(walls, w, a))
+walls = list(make_maze(alex.config['field_width']/CELL_WIDTH,
+                       alex.config['field_height']/CELL_WIDTH))
+alex.consume('world', lambda w, a: draw(walls, w, a))

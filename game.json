@@ -10,9 +10,9 @@
                "collider": 1,
                "library": 1,
                "library_advertiser": 1,
-               "opponent_random": 5,
+               "opponent_random": 2,
                "player": 1,
                "umpire": 1,
-               "walls": 0,
+               "walls": 1,
                "world": 1}
 }
