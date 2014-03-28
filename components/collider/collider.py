@@ -39,6 +39,5 @@ def get_dimensions(entity, library_url):
 
 alex = Alexandra()
 world_monitor = alex.topic_monitor('world')
-movement_queue = alex.subscribe('movement.*')
-alex.monitor(movement_queue,
+alex.consume('movement.*',
              lambda m, a: add_collisions(m, world_monitor.latest(), a))

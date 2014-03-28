@@ -26,7 +26,6 @@ class Queue:
 
     def consume(self, f):
         def callback(message):
-            #print "in Queue callback with message %s" % (message,)
             return f(loads(message), self._alex)
         consume(self._channel, self._q, callback)
 
@@ -68,6 +67,10 @@ class Alexandra:
             if message is not None:
                 f(message, self)
             sleep(self.config['tick_seconds']/5)
+
+    def consume(self, topic, f):
+        queue = Queue(self._channel, topic, self)
+        queue.consume(f)
 
     def each_tick(self, f):
         tick_queue = Queue(self._channel, 'tick', self)
