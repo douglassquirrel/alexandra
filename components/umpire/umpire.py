@@ -26,5 +26,4 @@ def filter_movement(movement, alex):
     alex.publish('decision_movement.' + entity, approved_movement)
 
 alex = Alexandra()
-movement_queue = alex.subscribe('movement_with_collisions.*')
-alex.monitor(movement_queue, filter_movement)
+alex.consume('movement_with_collisions.*', filter_movement)
