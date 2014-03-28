@@ -30,9 +30,9 @@ class Queue:
             return f(loads(message), self._alex)
         consume(self._channel, self._q, callback)
 
-class WorldMonitor:
-    def __init__(self, channel):
-        queue = subscribe(channel, 'world')
+class TopicMonitor:
+    def __init__(self, channel, topic):
+        queue = subscribe(channel, topic)
         self._monitor = QueueMonitor(channel, queue)
 
     def latest(self):
@@ -52,8 +52,8 @@ class Alexandra:
         if self._subscribe_world is True:
             self.next_world()
 
-    def get_world_monitor(self):
-        return WorldMonitor(self._channel)
+    def topic_monitor(self, topic):
+        return TopicMonitor(self._channel, topic)
 
     def on_each_world(self, f):
         self._each_world.append(f)
