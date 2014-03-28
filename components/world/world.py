@@ -2,7 +2,7 @@
 
 from alexandra import Alexandra
 
-alex = Alexandra(subscribe_world=False)
+alex = Alexandra()
 world = {'tick': 0, 'movements': {}, 'entities': {}}
 movement_queue = alex.subscribe('decision_movement.*')
 

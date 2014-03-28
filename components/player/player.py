@@ -42,6 +42,6 @@ def send_movement(from_position, to_position, tick, alex):
                 'from': from_position, 'to': to_position}
     alex.publish('movement.player', movement)
 
-alex = Alexandra(subscribe_world=True)
+alex = Alexandra()
 commands_queue = init(alex)
 alex.consume('world', lambda w, a: update(w, commands_queue, a))

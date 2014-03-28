@@ -5,15 +5,12 @@ from pubsub import create_channel, consume, publish, subscribe, unsubscribe, \
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
 class Queue:
-    def __init__(self, channel, topic, alex, subscribe_world=False):
+    def __init__(self, channel, topic, alex):
         self._channel = channel
         self._q = subscribe(self._channel, topic)
-        self._subscribe_world = subscribe_world
         self._alex = alex
 
     def next(self):
-        if self._subscribe_world is True:
-            self._alex.update_world()
         message = get_message(self._channel, self._q)
         if message is not None:
             return loads(message)
@@ -37,28 +34,15 @@ class TopicMonitor:
         return loads(self._monitor.latest())
 
 class Alexandra:
-    def __init__(self, subscribe_world=False, fetch_game_config=True):
+    def __init__(self, fetch_game_config=True):
         self._channel = create_channel()
         self._library_url = self._get_library_url()
         self._library_files = {}
         if fetch_game_config is True:
             self._wait_for_game_config()
-        self._subscribe_world = subscribe_world
-        self._each_world = []
-        self._world_queue = None
-        self.world = None
-        if self._subscribe_world is True:
-            self.next_world()
 
     def topic_monitor(self, topic):
         return TopicMonitor(self._channel, topic)
-
-    def on_each_world(self, f):
-        self._each_world.append(f)
-
-    def wait(self):
-        while True:
-            self.next_world()
 
     def consume(self, topic, f):
         queue = Queue(self._channel, topic, self)
@@ -97,26 +81,7 @@ class Alexandra:
             print "Refused to publish %s, no documentation" % topic
 
     def subscribe(self, topic):
-        return Queue(self._channel, topic, self, self._subscribe_world)
-
-    def next_world(self):
-        if self._world_queue is None:
-            self._init_world_queue()
-        self.world = loads(get_message_block(self._channel, self._world_queue))
-        self._do_each_world()
-
-    def update_world(self):
-        new_world = get_message(self._channel, self._world_queue)
-        if new_world is not None:
-            self.world = loads(new_world)
-            self._do_each_world()
-
-    def _do_each_world(self):
-        for f in self._each_world:
-            f(self)
-
-    def _init_world_queue(self):
-        self._world_queue = subscribe(self._channel, 'world')
+        return Queue(self._channel, topic, self)
 
     def _get_library_url(self):
         library_url_queue = subscribe(self._channel, 'library_url')
