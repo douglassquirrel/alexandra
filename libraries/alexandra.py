@@ -34,7 +34,7 @@ class TopicMonitor:
 
 class Alexandra:
     def __init__(self, fetch_game_config=True):
-        game_id = argv[1]
+        game_id = argv[2]
         self._connection = Connection(game_id)
         self._library_url = self._get_library_url()
         self._library_files = {}

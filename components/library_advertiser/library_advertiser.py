@@ -15,7 +15,7 @@ def is_responsive(url):
         return False
 
 def publish_url(host, port):
-    game_id = argv[1]
+    game_id = argv[2]
     connection = Connection(game_id)
     url = 'http://%s:%d' % (host, port)
 
