@@ -5,7 +5,7 @@ from json import dumps
 from random import choice as randomchoice
 from sys import argv
 
-INDEX = int(argv[2])
+INDEX = int(argv[3])
 NAME = 'opponent_random_%d' % (INDEX,)
 WIDTH = 20
 HEIGHT = 20

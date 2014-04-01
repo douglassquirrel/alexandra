@@ -1,62 +1,64 @@
 from pika import BlockingConnection, ConnectionParameters
 
-EXCHANGE_NAME = 'alexandra'
+class Connection:
+    def __init__(self, exchange_name):
+        self._exchange_name = exchange_name
+        connection = BlockingConnection(ConnectionParameters('localhost'))
+        self._channel = connection.channel()
+        self._channel.exchange_declare(exchange=self._exchange_name,
+                                       type='topic')
 
-def create_channel():
-    connection = BlockingConnection(ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.exchange_declare(exchange=EXCHANGE_NAME, type='topic')
-    return channel
+    def publish(self, topic, message):
+        self._channel.basic_publish(exchange=self._exchange_name,
+                                    routing_key=topic,
+                                    body=message)
 
-def publish(channel, label, message):
-    channel.basic_publish(exchange=EXCHANGE_NAME,
-                          routing_key=label,
-                          body=message)
+    def subscribe(self, topic):
+        result = self._channel.queue_declare(exclusive=True)
+        queue = result.method.queue
+        self._channel.queue_bind(exchange=self._exchange_name,
+                                 queue=queue,
+                                 routing_key=topic)
+        return queue
 
-def subscribe(channel, label):
-    result = channel.queue_declare(exclusive=True)
-    queue = result.method.queue
-    channel.queue_bind(exchange=EXCHANGE_NAME,
-                       queue=queue,
-                       routing_key=label)
-    return queue
+    def unsubscribe(self, queue, topic):
+        self._channel.queue_unbind(exchange=self._exchange_name,
+                                   queue=queue,
+                                   routing_key=topic)
 
-def unsubscribe(channel, queue, label):
-    channel.queue_unbind(exchange=EXCHANGE_NAME, queue=queue, routing_key=label)
+    def consume(self, queue, f):
+        def callback(ch, method, properties, body):
+            f(body)
 
-def consume(channel, queue, f):
-    def callback(ch, method, properties, body):
-        f(body)
+        self._channel.basic_consume(callback, queue=queue, no_ack=True)
+        self._channel.start_consuming()
 
-    channel.basic_consume(callback, queue=queue, no_ack=True)
-    channel.start_consuming()
+    def get_message(self, queue):
+        return self._channel.basic_get(0, queue=queue, no_ack=True)[2]
+
+    def get_all_messages(self, queue):
+        messages = []
+        while True:
+            message = self.get_message(queue)
+            if message is None:
+                return messages
+            else:
+                messages.append(message)
+
+    def get_message_block(self, queue):
+        while True:
+            message = self.get_message(queue)
+            if message is not None:
+                return message
 
 class QueueMonitor:
-    def __init__(self, channel, queue):
-        self._channel = channel
+    def __init__(self, connection, queue):
+        self._connection = connection
         self._queue = queue
         self._latest = None
 
     def latest(self):
-        messages = get_all_messages(self._channel, self._queue)
+        messages = self._connection.get_all_messages(self._queue)
         if len(messages) > 0:
             self._latest = messages[-1]
         return self._latest
-
-def get_message(channel, queue):
-    return channel.basic_get(0, queue=queue, no_ack=True)[2]
-
-def get_all_messages(channel, queue):
-    messages = []
-    while True:
-        message = get_message(channel, queue)
-        if message is None:
-            return messages
-        else:
-            messages.append(message)
-
-def get_message_block(channel, queue):
-    while True:
-        message = get_message(channel, queue)
-        if message is not None:
-            return message

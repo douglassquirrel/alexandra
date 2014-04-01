@@ -1,51 +1,51 @@
 from json import dumps, load, loads
-from pubsub import create_channel, consume, publish, subscribe, unsubscribe, \
-                   get_message, get_all_messages, get_message_block, \
-                   QueueMonitor
+from pubsub import Connection, QueueMonitor
+from sys import argv
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
 class Queue:
-    def __init__(self, channel, topic, alex):
-        self._channel = channel
-        self._q = subscribe(self._channel, topic)
+    def __init__(self, connection, topic, alex):
+        self._connection = connection
+        self._q = self._connection.subscribe(topic)
         self._alex = alex
 
     def next(self):
-        message = get_message(self._channel, self._q)
+        message = self._connection.get_message(self._q)
         if message is not None:
             return loads(message)
         else:
             return None
 
     def fetch_all(self):
-        return map(loads, get_all_messages(self._channel, self._q))
+        return map(loads, self._connection.get_all_messages(self._q))
 
     def consume(self, f):
         def callback(message):
             return f(loads(message), self._alex)
-        consume(self._channel, self._q, callback)
+        self._connection.consume(self._q, callback)
 
 class TopicMonitor:
-    def __init__(self, channel, topic):
-        queue = subscribe(channel, topic)
-        self._monitor = QueueMonitor(channel, queue)
+    def __init__(self, connection, topic):
+        queue = connection.subscribe(topic)
+        self._monitor = QueueMonitor(connection, queue)
 
     def latest(self):
         return loads(self._monitor.latest())
 
 class Alexandra:
     def __init__(self, fetch_game_config=True):
-        self._channel = create_channel()
+        game_id = argv[1]
+        self._connection = Connection(game_id)
         self._library_url = self._get_library_url()
         self._library_files = {}
         if fetch_game_config is True:
             self._wait_for_game_config()
 
     def topic_monitor(self, topic):
-        return TopicMonitor(self._channel, topic)
+        return TopicMonitor(self._connection, topic)
 
     def consume(self, topic, f):
-        queue = Queue(self._channel, topic, self)
+        queue = Queue(self._connection, topic, self)
         queue.consume(f)
 
     def enter_in_library(self, data, path, content_type):
@@ -76,17 +76,17 @@ class Alexandra:
     def publish(self, topic, message):
         main_topic = topic.split('.')[0]
         if self.is_in_library('/messages/%s.json' % main_topic):
-            publish(self._channel, topic, dumps(message))
+            self._connection.publish(topic, dumps(message))
         else:
             print "Refused to publish %s, no documentation" % topic
 
     def subscribe(self, topic):
-        return Queue(self._channel, topic, self)
+        return Queue(self._connection, topic, self)
 
     def _get_library_url(self):
-        library_url_queue = subscribe(self._channel, 'library_url')
-        library_url = get_message_block(self._channel, library_url_queue)
-        unsubscribe(self._channel, library_url_queue, 'library_url')
+        library_url_queue = self._connection.subscribe('library_url')
+        library_url = self._connection.get_message_block(library_url_queue)
+        self._connection.unsubscribe(library_url_queue, 'library_url')
         return library_url
 
     def _wait_for_game_config(self):

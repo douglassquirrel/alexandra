@@ -4,7 +4,7 @@ from alexandra import Alexandra
 from json import dumps
 from sys import argv
 
-INDEX = int(argv[2])
+INDEX = int(argv[3])
 NAME = 'player_%d' % (INDEX,)
 WIDTH = 20
 HEIGHT = 20

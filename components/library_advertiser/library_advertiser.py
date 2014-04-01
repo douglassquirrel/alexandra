@@ -2,7 +2,7 @@
 
 from json import load
 from os.path import join as pathjoin
-from pubsub import create_channel, publish
+from pubsub import Connection
 from sys import argv
 from time import sleep
 from urllib2 import URLError, urlopen
@@ -15,11 +15,12 @@ def is_responsive(url):
         return False
 
 def publish_url(host, port):
-    channel = create_channel()
+    game_id = argv[1]
+    connection = Connection(game_id)
     url = 'http://%s:%d' % (host, port)
 
     while is_responsive(url + '/index.html'):
-        publish(channel=channel, label='library_url', message=url)
+        connection.publish(topic='library_url', message=url)
         sleep(1)
 
 config_dir = argv[1]

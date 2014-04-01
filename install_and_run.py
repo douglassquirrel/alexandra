@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 from os import listdir
-from os.path import join as pathjoin
+from os.path import basename, join as pathjoin
 from shutil import copy, copytree
 from subprocess import call
 from tempfile import mkdtemp
@@ -22,8 +22,10 @@ def install_components(install_dir):
 def install_infra(install_dir):
     map(lambda(f): copy(f, install_dir), INFRA_FILES)
 
-install_dir = mkdtemp(prefix='alexandra.')
-print 'Installing in %s' % (install_dir,)
+game_name = 'alexandra'
+install_dir = mkdtemp(prefix=game_name + '.')
+game_id = basename(install_dir)
+print 'Installing in %s and using game id %s' % (install_dir, game_id)
 install_components(install_dir)
 install_infra(install_dir)
-call(pathjoin(install_dir, 'run.py'), cwd=install_dir)
+call([pathjoin(install_dir, 'run.py'), game_id], cwd=install_dir)
