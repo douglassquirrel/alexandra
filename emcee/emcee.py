@@ -7,8 +7,6 @@ from subprocess import call
 from sys import argv
 from tempfile import mkdtemp
 
-INFRA_FILES = ['infra.json', 'run.py']
-
 def full_path_listdir(d):
     return [pathjoin(d, name) for name in listdir(d)]
 
@@ -17,14 +15,14 @@ def copy_libraries_to(dest_dir):
 
 def install_game(game_dir, install_dir):
     game_json = pathjoin(game_dir, 'game.json')
-    game_components_dir = pathjoin(game_dir, 'components')
-
     copy(game_json, install_dir)
+
+    game_components_dir = pathjoin(game_dir, 'components')
     installed_components_dir = pathjoin(install_dir, 'components')
     copytree(game_components_dir, installed_components_dir)
     map(copy_libraries_to, full_path_listdir(installed_components_dir))
 
-    map(lambda(f): copy(f, install_dir), INFRA_FILES)
+    map(lambda(f): copy(f, install_dir), full_path_listdir('infra'))
 
 def install_client(game_dir, install_client_dir):
     game_client_dir = pathjoin(game_dir, 'client')
