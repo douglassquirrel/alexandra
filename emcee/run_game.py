@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 from os import listdir
-from os.path import abspath, basename, join as pathjoin
+from os.path import abspath, join as pathjoin
 from shutil import copy, copytree
 from subprocess import call
 from sys import argv
