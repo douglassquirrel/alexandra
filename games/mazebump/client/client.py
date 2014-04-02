@@ -6,6 +6,7 @@ from pygame import display, event, init, key, quit, Surface, surfarray
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
 from StringIO import StringIO
 from sys import exit
+from uuid import uuid4
 
 def init_window(field_width, field_height):
     init()
@@ -59,6 +60,8 @@ def draw_rectangle(width, height, colour, position, window):
     rectangle.unlock()
     window.blit(rectangle, position)
 
-alex = Alexandra()
+game_id = str(uuid4())
+print "Starting client for game id %s" % game_id
+alex = Alexandra(game_id)
 window = init_window(alex.config['field_width'], alex.config['field_height'])
 alex.consume('world', lambda w, a: update(window, w, a))
