@@ -33,8 +33,9 @@ class TopicMonitor:
         return loads(self._monitor.latest())
 
 class Alexandra:
-    def __init__(self, fetch_game_config=True):
-        game_id = argv[2]
+    def __init__(self, game_id=None, fetch_game_config=True):
+        if game_id is None:
+            game_id = argv[2]
         self._connection = Connection(game_id)
         self._library_url = self._get_library_url()
         self._library_files = {}
