@@ -34,4 +34,4 @@ print 'Installing client in %s' % (install_dir,)
 
 install_client(get_client_files(game_name), install_dir)
 executable = filter(is_executable_file, abspath_listdir(install_dir))[0]
-call([executable], cwd=install_dir)
+call([executable, game_name], cwd=install_dir)

@@ -1,11 +1,11 @@
 #! /usr/bin/python
 
-from alexandra import Alexandra
+from alexandra import Alexandra, request_game
 from json import loads
 from pygame import display, event, init, key, quit, Surface, surfarray
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
 from StringIO import StringIO
-from sys import exit
+from sys import argv, exit
 from uuid import uuid4
 
 def init_window(field_width, field_height):
@@ -60,8 +60,11 @@ def draw_rectangle(width, height, colour, position, window):
     rectangle.unlock()
     window.blit(rectangle, position)
 
+game_name = argv[1]
 game_id = str(uuid4())
-print "Starting client for game id %s" % game_id
+print "Starting client for game %s with id %s" % (game_name, game_id)
+
+request_game(game_name, game_id)
 alex = Alexandra(game_id)
 window = init_window(alex.config['field_width'], alex.config['field_height'])
 alex.consume('world', lambda w, a: update(window, w, a))

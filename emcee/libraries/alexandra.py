@@ -32,6 +32,11 @@ class TopicMonitor:
     def latest(self):
         return loads(self._monitor.latest())
 
+def request_game(game_name, game_id):
+    connection = Connection('emcee')
+    game_info = {'name': game_name, 'id': game_id}
+    connection.publish('game.wanted', dumps(game_info))
+
 class Alexandra:
     def __init__(self, game_id=None, fetch_game_config=True):
         if game_id is None:
