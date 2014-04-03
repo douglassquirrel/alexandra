@@ -1,4 +1,6 @@
 {
 "library_host": "localhost",
-"library_port": 8080
+"library_port": 8080,
+"pubsub_host": "localhost",
+"pubsub_port": 9090
 }
