@@ -35,7 +35,6 @@ handlers = [('/$',                      root),
             ('/queues/$',               queues),
             ('/queues/[^/]+$',          queue)]
 
-
 class PubSubHandler(BaseHTTPRequestHandler):
     def _find_handler(self):
         matches = filter(lambda(r, h): match(r, self.path), handlers)
