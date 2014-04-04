@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>PubSub Over HTTP</title>
+  </head>
+  <body>
+    <h2>Publishing a message</h2>
+    <ul>
+      <li><strong>Method</strong>: POST</li>
+      <li><strong>Inputs</strong>: <em>exchange</em> and <em>topic</em>
+                                   to which you want to publish</li>
+      <li><strong>URL</strong>:
+         <a href="/exchanges/[exchange]/[topic]">
+           /exchanges/[exchange]/[topic]
+         </a></li>
+      <li><strong>Contents:</strong> The message to be published</li>
+    </ul>
+    <h2>Subscribe to a topic</h2>
+    <ul>
+      <li><strong>Method</strong>: GET</li>
+      <li><strong>Inputs</strong>: <em>exchange</em> and <em>topic</em>
+                                   to which you wish to subscribe</li>
+      <li><strong>URL</strong>:
+         <a href="/exchanges/[exchange]/[topic]">
+           /exchanges/[exchange]/[topic]
+         </a></li>
+      <li><strong>Returns:</strong> String giving the name of a
+                                    queue subscribed to the topic
+                                    (see below)</li>
+    </ul>
+    <h2>Unsubscribe</h2>
+    <ul>
+      <li><strong>Method</strong>: DELETE</li>
+      <li><strong>Inputs</strong>: <em>queue</em> that you want to
+                                   unsubscribe</li>
+      <li><strong>URL</strong>:
+         <a href="/queues/[queue]">
+           /queues/[queue]
+         </a></li>
+      <li><strong>Returns:</strong> Nothing</li>
+    </ul>
+    <h2>Get messages</h2>
+    <ul>
+      <li><strong>Method</strong>: GET</li>
+      <li><strong>Headers</strong>:
+        <ul>
+          <li><strong>Range: head</strong>. Get the message at the head of
+              the queue.</li>
+          <li><strong>Range: all</strong>. Get all messages on the queue,
+              in FIFO order.</li>
+          <li><strong>Patience: [n]</strong>. If the queue is empty, wait up to
+              <em>n</em> seconds to get a message.</li>
+        </ul>
+        Defaults (if headers omitted) are <strong>Range: head</strong> and
+        <strong>Patience: 0</strong>.
+      </li>
+      <li><strong>Inputs</strong>: <em>queue</em> from which you want
+                                   to get messages</li>
+      <li><strong>URL</strong>:
+         <a href="/queues/[queue]">
+           /queues/[queue]
+         </a></li>
+      <li><strong>Returns:</strong> Zero or more messages, as strings
+          separated by newlines.</li>
+    </ul>
+  </body>
+</html>

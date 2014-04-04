@@ -6,9 +6,17 @@ from os.path import join as pathjoin
 from re import match
 from sys import argv
 
+with open('pubsub_ws_doc.html', 'r') as doc:
+    DOC_HTML = doc.read()
+
+def wrong_verb(expected, got):
+    return {'code': 405,
+            'content': 'Expected method %s, got %s' % (expected, got)}
+
 def root(path, verb):
-    print 'root_doc %s %s' % (path, verb)
-    return {'code': 200, 'content': '"OK"'}
+    if verb != 'GET':
+        return wrong_verb(expected='GET', got=verb)
+    return {'code': 200, 'content': DOC_HTML, 'type': 'text/html'}
 def exchanges(path, verb):
     print 'exchanges %s %s' % (path, verb)
     return {'code': 200, 'content': '"OK"'}
@@ -59,12 +67,13 @@ class PubSubHandler(BaseHTTPRequestHandler):
             return
         response = handler(self.path, verb)
         code, content = response['code'], response['content']
+        content_type = response.get('type', 'application/json')
         if code >= 400:
-            self.send_error(code)
+            self.send_error(code, content)
             return
 
         self.send_response(code)
-        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Type', content_type)
         self.send_header('Content-Length', len(content))
         self.end_headers()
         self.wfile.write(content)
