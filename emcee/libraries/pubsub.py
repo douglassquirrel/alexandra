@@ -48,11 +48,12 @@ class Connection:
 
     def get_message_block(self, queue, timeout=None):
         alarm = Alarm(timeout)
-        while not alarm.is_ringing():
+        while True:
             message = self.get_message(queue)
             if message is not None:
                 return message
-        return None
+            if alarm.is_ringing():
+                return None
 
 class Alarm:
     def __init__(self, duration):

@@ -31,9 +31,9 @@ def topic_handler(verb, headers, content, pubsub_data, exchange, topic):
     else:
         return wrong_verb(expected='GET or POST', got=verb)
 
-def get_message_range(connection, queue, range_value):
+def get_message_range(connection, queue, timeout, range_value):
     if range_value == 'head':
-        return connection.get_message(queue)
+        return connection.get_message_block(queue, timeout)
     elif range_value == 'all':
         return '\n'.join(connection.get_all_messages(queue))
 
@@ -41,7 +41,8 @@ def queue_handler(verb, headers, content, pubsub_data, queue):
     if verb == 'GET':
         connection = pubsub_data.connection_for_queue(queue)
         range_header = headers.get('Range', 'head')
-        message = get_message_range(connection, queue, range_header)
+        timeout = float(headers.get('Patience', 0))
+        message = get_message_range(connection, queue, timeout, range_header)
         if message is None:
             message = ''
         return {'code': 200, 'content': message}
