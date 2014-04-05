@@ -3,53 +3,76 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import load
 from os.path import join as pathjoin
+from pubsub import Connection
 from re import match
 from sys import argv
-
-with open('pubsub_ws_doc.html', 'r') as doc:
-    DOC_HTML = doc.read()
 
 def wrong_verb(expected, got):
     return {'code': 405,
             'content': 'Expected method %s, got %s' % (expected, got)}
 
-def root(path, verb):
+def root_handler(verb, content, pubsub_data):
     if verb != 'GET':
         return wrong_verb(expected='GET', got=verb)
-    return {'code': 200, 'content': DOC_HTML, 'type': 'text/html'}
-def exchanges(path, verb):
-    print 'exchanges %s %s' % (path, verb)
-    return {'code': 200, 'content': '"OK"'}
-def exchange(path, verb):
-    print 'exchange %s %s' % (path, verb)
-    return {'code': 200, 'content': '"OK"'}
-def topic(path, verb):
-    print 'topic %s %s' % (path, verb)
-    return {'code': 200, 'content': '"OK"'}
-def queues(path, verb):
-    print 'queues %s %s' % (path, verb)
-    return {'code': 200, 'content': '"OK"'}
-def queue(path, verb):
-    print 'queue %s %s' % (path, verb)
-    return {'code': 200, 'content': '"OK"'}
+    with open('pubsub_ws_doc.html', 'r') as f:
+        doc_html = f.read()
+    return {'code': 200, 'content': doc_html, 'type': 'text/html'}
 
-handlers = [('/$',                      root),
-            ('/exchanges$',             exchanges),
-            ('/exchanges/$',            exchanges),
-            ('/exchanges/[^/]*$',       exchange),
-            ('/exchanges/[^/]+/$',      exchange),
-            ('/exchanges/[^/]+/[^/]+$', topic),
-            ('/queues$',                queues),
-            ('/queues/$',               queues),
-            ('/queues/[^/]+$',          queue)]
+def topic_handler(verb, content, pubsub_data, exchange, topic):
+    if verb == 'POST':
+        connection = pubsub_data.connection_for_exchange(exchange)
+        connection.publish(topic, content)
+        return {'code': 200, 'content': ''}
+    elif verb == 'GET':
+        connection = pubsub_data.connection_for_exchange(exchange)
+        queue = connection.subscribe(topic)
+        pubsub_data.register_queue(queue, exchange)
+        return {'code': 200, 'content': queue}
+    else:
+        return wrong_verb(expected='GET or POST', got=verb)
+
+def queue_handler(verb, content, pubsub_data, queue):
+    if verb == 'GET':
+        connection = pubsub_data.connection_for_queue(queue)
+        message = connection.get_message(queue)
+        if message is None:
+            message = ''
+        return {'code': 200, 'content': message}
+    else:
+        return wrong_verb(expected='DELETE, GET, or POST', got=verb)
+
+handlers = [('/$',                          root_handler),
+            ('/exchanges/([^/]+)/([^/]+)$', topic_handler),
+            ('/queues/([^/]+)$',            queue_handler)]
+
+class PubSubData:
+    def __init__(self):
+        self._connections = {}
+        self._queues = {}
+
+    def connection_for_exchange(self, exchange):
+        if exchange not in self._connections:
+            self._connections[exchange] = Connection(exchange)
+        return self._connections[exchange]
+
+    def register_queue(self, queue, exchange):
+        self._queues[queue] = exchange
+
+    def connection_for_queue(self, queue):
+        exchange = self._queues[queue]
+        return self.connection_for_exchange(exchange)
 
 class PubSubHandler(BaseHTTPRequestHandler):
-    def _find_handler(self):
-        matches = filter(lambda(r, h): match(r, self.path), handlers)
+    def _parse_path(self):
+        match_results = map(lambda(r, h): (match(r, self.path), h), handlers)
+        matches = filter(lambda(m, h): m is not None, match_results)
         if len(matches) == 0:
             return None
         else:
-            return matches[0][1]
+            matched = matches[0]
+            params = matched[0].groups()
+            handler = matched[1]
+            return lambda v, c, ps: handler(v, c, ps, *params)
 
     def do_GET(self):
         self._do_request('GET')
@@ -61,11 +84,18 @@ class PubSubHandler(BaseHTTPRequestHandler):
         self._do_request('DELETE')
 
     def _do_request(self, verb):
-        handler = self._find_handler()
+        if not hasattr(self.server, 'pubsub_data'):
+            self.server.pubsub_data = PubSubData()
+        handler = self._parse_path()
         if handler is None:
             self.send_error(404)
             return
-        response = handler(self.path, verb)
+        length = int(self.headers.get('Content-Length', 0))
+        content = self.rfile.read(length)
+        response = handler(verb, content, self.server.pubsub_data)
+        self._do_response(response)
+
+    def _do_response(self, response):
         code, content = response['code'], response['content']
         content_type = response.get('type', 'application/json')
         if code >= 400:
