@@ -1,4 +1,5 @@
 from pika import BlockingConnection, ConnectionParameters
+from time import time as now
 
 class Connection:
     def __init__(self, exchange_name):
@@ -45,11 +46,23 @@ class Connection:
             else:
                 messages.append(message)
 
-    def get_message_block(self, queue):
-        while True:
+    def get_message_block(self, queue, timeout=None):
+        alarm = Alarm(timeout)
+        while not alarm.is_ringing():
             message = self.get_message(queue)
             if message is not None:
                 return message
+        return None
+
+class Alarm:
+    def __init__(self, duration):
+        if duration is not None:
+            self.alarm_time = now() + duration
+        else:
+            self.alarm_time = None
+
+    def is_ringing(self):
+        return self.alarm_time is not None and now() > self.alarm_time
 
 class QueueMonitor:
     def __init__(self, connection, queue):
