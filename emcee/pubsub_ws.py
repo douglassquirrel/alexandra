@@ -11,14 +11,14 @@ def wrong_verb(expected, got):
     return {'code': 405,
             'content': 'Expected method %s, got %s' % (expected, got)}
 
-def root_handler(verb, content, pubsub_data):
+def root_handler(verb, headers, content, pubsub_data):
     if verb != 'GET':
         return wrong_verb(expected='GET', got=verb)
     with open('pubsub_ws_doc.html', 'r') as f:
         doc_html = f.read()
     return {'code': 200, 'content': doc_html, 'type': 'text/html'}
 
-def topic_handler(verb, content, pubsub_data, exchange, topic):
+def topic_handler(verb, headers, content, pubsub_data, exchange, topic):
     if verb == 'POST':
         connection = pubsub_data.connection_for_exchange(exchange)
         connection.publish(topic, content)
@@ -31,10 +31,17 @@ def topic_handler(verb, content, pubsub_data, exchange, topic):
     else:
         return wrong_verb(expected='GET or POST', got=verb)
 
-def queue_handler(verb, content, pubsub_data, queue):
+def get_message_range(connection, queue, range_value):
+    if range_value == 'head':
+        return connection.get_message(queue)
+    elif range_value == 'all':
+        return '\n'.join(connection.get_all_messages(queue))
+
+def queue_handler(verb, headers, content, pubsub_data, queue):
     if verb == 'GET':
         connection = pubsub_data.connection_for_queue(queue)
-        message = connection.get_message(queue)
+        range_header = headers.get('Range', 'head')
+        message = get_message_range(connection, queue, range_header)
         if message is None:
             message = ''
         return {'code': 200, 'content': message}
@@ -80,7 +87,7 @@ class PubSubHandler(BaseHTTPRequestHandler):
             matched = matches[0]
             params = matched[0].groups()
             handler = matched[1]
-            return lambda v, c, ps: handler(v, c, ps, *params)
+            return lambda v, h, c, ps: handler(v, h, c, ps, *params)
 
     def do_GET(self):
         self._do_request('GET')
@@ -100,7 +107,7 @@ class PubSubHandler(BaseHTTPRequestHandler):
             return
         length = int(self.headers.get('Content-Length', 0))
         content = self.rfile.read(length)
-        response = handler(verb, content, self.server.pubsub_data)
+        response = handler(verb, self.headers, content, self.server.pubsub_data)
         self._do_response(response)
 
     def _do_response(self, response):
