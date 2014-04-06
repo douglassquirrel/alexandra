@@ -15,7 +15,7 @@ class Connection:
                                     body=message)
 
     def subscribe(self, topic):
-        result = self._channel.queue_declare(exclusive=True)
+        result = self._channel.queue_declare()
         queue = result.method.queue
         self._channel.queue_bind(exchange=self._exchange_name,
                                  queue=queue,

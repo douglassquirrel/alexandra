@@ -5,28 +5,28 @@ from json import load
 from os.path import join as pathjoin
 from pubsub import Connection
 from re import match
+from SocketServer import ForkingMixIn
 from sys import argv
 
 def wrong_verb(expected, got):
     return {'code': 405,
             'content': 'Expected method %s, got %s' % (expected, got)}
 
-def root_handler(verb, headers, content, pubsub_data):
+def root_handler(verb, headers, content):
     if verb != 'GET':
         return wrong_verb(expected='GET', got=verb)
     with open('pubsub_ws_doc.html', 'r') as f:
         doc_html = f.read()
     return {'code': 200, 'content': doc_html, 'type': 'text/html'}
 
-def topic_handler(verb, headers, content, pubsub_data, exchange, topic):
+def topic_handler(verb, headers, content, exchange, topic):
     if verb == 'POST':
-        connection = pubsub_data.connection_for_exchange(exchange)
+        connection = Connection(exchange)
         connection.publish(topic, content)
         return {'code': 200, 'content': ''}
     elif verb == 'GET':
-        connection = pubsub_data.connection_for_exchange(exchange)
+        connection = Connection(exchange)
         queue = connection.subscribe(topic)
-        pubsub_data.register_queue(queue, exchange)
         return {'code': 200, 'content': queue}
     else:
         return wrong_verb(expected='GET or POST', got=verb)
@@ -37,9 +37,9 @@ def get_message_range(connection, queue, timeout, range_value):
     elif range_value == 'all':
         return '\n'.join(connection.get_all_messages(queue))
 
-def queue_handler(verb, headers, content, pubsub_data, queue):
+def queue_handler(verb, headers, content, exchange, queue):
     if verb == 'GET':
-        connection = pubsub_data.connection_for_queue(queue)
+        connection = Connection(exchange)
         range_header = headers.get('Range', 'head')
         timeout = float(headers.get('Patience', 0))
         message = get_message_range(connection, queue, timeout, range_header)
@@ -47,36 +47,15 @@ def queue_handler(verb, headers, content, pubsub_data, queue):
             message = ''
         return {'code': 200, 'content': message}
     elif verb == 'DELETE':
-        connection = pubsub_data.connection_for_queue(queue)
+        connection = Connection(exchange)
         connection.unsubscribe(queue)
-        pubsub_data.remove_queue(queue)
         return {'code': 200, 'content': ''}
     else:
         return wrong_verb(expected='DELETE or GET', got=verb)
 
-handlers = [('/$',                          root_handler),
-            ('/exchanges/([^/]+)/([^/]+)$', topic_handler),
-            ('/queues/([^/]+)$',            queue_handler)]
-
-class PubSubData:
-    def __init__(self):
-        self._connections = {}
-        self._queues = {}
-
-    def connection_for_exchange(self, exchange):
-        if exchange not in self._connections:
-            self._connections[exchange] = Connection(exchange)
-        return self._connections[exchange]
-
-    def register_queue(self, queue, exchange):
-        self._queues[queue] = exchange
-
-    def remove_queue(self, queue):
-        del self._queues[queue]
-
-    def connection_for_queue(self, queue):
-        exchange = self._queues[queue]
-        return self.connection_for_exchange(exchange)
+handlers = [('/$',                                 root_handler),
+            ('/exchanges/([^/]+)/([^/]+)$',        topic_handler),
+            ('/exchanges/([^/]+)/queues/([^/]+)$', queue_handler)]
 
 class PubSubHandler(BaseHTTPRequestHandler):
     def _parse_path(self):
@@ -88,7 +67,7 @@ class PubSubHandler(BaseHTTPRequestHandler):
             matched = matches[0]
             params = matched[0].groups()
             handler = matched[1]
-            return lambda v, h, c, ps: handler(v, h, c, ps, *params)
+            return lambda v, h, c: handler(v, h, c, *params)
 
     def do_GET(self):
         self._do_request('GET')
@@ -100,15 +79,13 @@ class PubSubHandler(BaseHTTPRequestHandler):
         self._do_request('DELETE')
 
     def _do_request(self, verb):
-        if not hasattr(self.server, 'pubsub_data'):
-            self.server.pubsub_data = PubSubData()
         handler = self._parse_path()
         if handler is None:
             self.send_error(404)
             return
         length = int(self.headers.get('Content-Length', 0))
         content = self.rfile.read(length)
-        response = handler(verb, self.headers, content, self.server.pubsub_data)
+        response = handler(verb, self.headers, content)
         self._do_response(response)
 
     def _do_response(self, response):
@@ -127,8 +104,11 @@ class PubSubHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
+class ForkingHTTPServer(ForkingMixIn, HTTPServer):
+    pass
+
 def run_server(host, port):
-    server = HTTPServer((host, port), PubSubHandler)
+    server = ForkingHTTPServer((host, port), PubSubHandler)
     server.serve_forever()
 
 config_dir = argv[1]
