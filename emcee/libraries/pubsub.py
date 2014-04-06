@@ -22,10 +22,8 @@ class Connection:
                                  routing_key=topic)
         return queue
 
-    def unsubscribe(self, queue, topic):
-        self._channel.queue_unbind(exchange=self._exchange_name,
-                                   queue=queue,
-                                   routing_key=topic)
+    def unsubscribe(self, queue):
+        self._channel.queue_delete(callback=None, queue=queue)
 
     def consume(self, queue, f):
         def callback(ch, method, properties, body):

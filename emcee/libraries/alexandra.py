@@ -92,7 +92,7 @@ class Alexandra:
     def _get_library_url(self):
         library_url_queue = self._connection.subscribe('library_url')
         library_url = self._connection.get_message_block(library_url_queue)
-        self._connection.unsubscribe(library_url_queue, 'library_url')
+        self._connection.unsubscribe(library_url_queue)
         return library_url
 
     def _wait_for_game_config(self):

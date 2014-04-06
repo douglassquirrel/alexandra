@@ -26,7 +26,7 @@ def topic_handler(verb, headers, content, pubsub_data, exchange, topic):
     elif verb == 'GET':
         connection = pubsub_data.connection_for_exchange(exchange)
         queue = connection.subscribe(topic)
-        pubsub_data.register_queue(queue, topic, exchange)
+        pubsub_data.register_queue(queue, exchange)
         return {'code': 200, 'content': queue}
     else:
         return wrong_verb(expected='GET or POST', got=verb)
@@ -48,8 +48,8 @@ def queue_handler(verb, headers, content, pubsub_data, queue):
         return {'code': 200, 'content': message}
     elif verb == 'DELETE':
         connection = pubsub_data.connection_for_queue(queue)
-        topic = pubsub_data.topic_for_queue(queue)
-        connection.unsubscribe(queue, topic)
+        connection.unsubscribe(queue)
+        pubsub_data.remove_queue(queue)
         return {'code': 200, 'content': ''}
     else:
         return wrong_verb(expected='DELETE or GET', got=verb)
@@ -68,15 +68,15 @@ class PubSubData:
             self._connections[exchange] = Connection(exchange)
         return self._connections[exchange]
 
-    def register_queue(self, queue, topic, exchange):
-        self._queues[queue] = {'exchange': exchange, 'topic': topic}
+    def register_queue(self, queue, exchange):
+        self._queues[queue] = exchange
+
+    def remove_queue(self, queue):
+        del self._queues[queue]
 
     def connection_for_queue(self, queue):
-        exchange = self._queues[queue]['exchange']
+        exchange = self._queues[queue]
         return self.connection_for_exchange(exchange)
-
-    def topic_for_queue(self, queue):
-        return self._queues[queue]['topic']
 
 class PubSubHandler(BaseHTTPRequestHandler):
     def _parse_path(self):
