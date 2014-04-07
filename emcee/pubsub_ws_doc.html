@@ -52,7 +52,8 @@
           <li><strong>Range: all</strong>. Get all messages on the queue,
               in FIFO order.</li>
           <li><strong>Patience: [n]</strong>. If the queue is empty, wait up to
-              <em>n</em> seconds to get a message.</li>
+              <em>n</em> seconds to get a message. Set to zero to ensure
+              an immediate return.</li>
         </ul>
         Defaults (if headers omitted) are <strong>Range: head</strong> and
         <strong>Patience: 0</strong>.

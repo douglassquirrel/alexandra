@@ -1,10 +1,13 @@
 from pika import BlockingConnection, ConnectionParameters
+from re import match
 from time import time as now
+from urllib2 import urlopen
 
-class Connection:
-    def __init__(self, exchange_name):
+class AMQPConnection:
+    def __init__(self, url, exchange_name):
         self._exchange_name = exchange_name
-        connection = BlockingConnection(ConnectionParameters('localhost'))
+        host = match(r"amqp://(\w+)", url).group(1)
+        connection = BlockingConnection(ConnectionParameters(host))
         self._channel = connection.channel()
         self._channel.exchange_declare(exchange=self._exchange_name,
                                        type='topic')
@@ -52,6 +55,37 @@ class Connection:
                 return message
             if alarm.is_ringing():
                 return None
+
+class HTTPConnection:
+    def __init__(self, url, exchange_name):
+        self._root_url = '%s/exchanges/%s' % (url, exchange_name)
+
+    def publish(self, topic, message):
+        urlopen('%s/%s' % (self._root_url, topic), message)
+
+    def subscribe(self, topic):
+        return urlopen('%s/%s' % (self._root_url, topic))
+
+    def unsubscribe(self, queue):
+        pass
+
+    def consume(self, queue, f):
+        pass
+
+    def get_message(self, queue):
+        pass
+
+    def get_all_messages(self, queue):
+        pass
+
+    def get_message_block(self, queue, timeout=None):
+        pass
+
+connection_classes = {'amqp': AMQPConnection, 'http': HTTPConnection}
+
+def connect(url, exchange_name):
+    protocol = match(r"(\w+)://", url).group(1)
+    return connection_classes[protocol](url, exchange_name)
 
 class Alarm:
     def __init__(self, duration):

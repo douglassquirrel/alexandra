@@ -3,7 +3,7 @@
 from json import loads
 from os import listdir
 from os.path import abspath, join as pathjoin
-from pubsub import Connection
+from pubsub import connect
 from shutil import copy, copytree
 from subprocess import call
 from sys import argv
@@ -38,6 +38,6 @@ def start_game(message, games_dir, libraries_dir, infra_dir):
     call([pathjoin(install_dir, 'run.py'), id], cwd=install_dir)
 
 games_dir, libraries_dir, infra_dir = argv[1], argv[2], argv[3]
-connection = Connection('emcee')
+connection = connect('amqp://localhost', 'emcee')
 queue = connection.subscribe('game.wanted')
 connection.consume(queue, lambda(m): start_game(m, games_dir, libraries_dir, infra_dir))

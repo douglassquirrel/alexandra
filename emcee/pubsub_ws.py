@@ -3,7 +3,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import load
 from os.path import join as pathjoin
-from pubsub import Connection
+from pubsub import connect
 from re import match
 from SocketServer import ForkingMixIn
 from sys import argv
@@ -21,7 +21,7 @@ def root_handler(verb, headers, content):
 
 def topic_handler(verb, headers, content, exchange, topic):
     if verb == 'POST':
-        connection = Connection(exchange)
+        connection = connect('amqp://localhost', exchange)
         connection.publish(topic, content)
         return {'code': 200, 'content': ''}
     elif verb == 'GET':
