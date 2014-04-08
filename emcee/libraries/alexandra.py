@@ -1,5 +1,5 @@
 from json import dumps, load, loads
-from pubsub import Connection, QueueMonitor
+from pubsub import connect, QueueMonitor
 from sys import argv
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
 
@@ -33,7 +33,7 @@ class TopicMonitor:
         return loads(self._monitor.latest())
 
 def request_game(game_name, game_id):
-    connection = Connection('emcee')
+    connection = connect('amqp://localhost', 'emcee')
     game_info = {'name': game_name, 'id': game_id}
     connection.publish('game.wanted', dumps(game_info))
 
@@ -41,7 +41,7 @@ class Alexandra:
     def __init__(self, game_id=None, fetch_game_config=True):
         if game_id is None:
             game_id = argv[2]
-        self._connection = Connection(game_id)
+        self._connection = connect('amqp://localhost', game_id)
         self._library_url = self._get_library_url()
         self._library_files = {}
         if fetch_game_config is True:

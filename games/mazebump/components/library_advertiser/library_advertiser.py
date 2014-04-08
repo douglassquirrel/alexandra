@@ -2,7 +2,7 @@
 
 from json import load
 from os.path import join as pathjoin
-from pubsub import Connection
+from pubsub import connect
 from sys import argv
 from time import sleep
 from urllib2 import URLError, urlopen
@@ -16,7 +16,7 @@ def is_responsive(url):
 
 def publish_url(host, port):
     game_id = argv[2]
-    connection = Connection(game_id)
+    connection = connect('amqp://localhost', game_id)
     url = 'http://%s:%d' % (host, port)
 
     while is_responsive(url + '/index.html'):
