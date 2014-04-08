@@ -1,7 +1,9 @@
 from pika import BlockingConnection, ConnectionParameters
 from re import match
 from time import time as now
-from urllib2 import urlopen
+from urllib2 import build_opener, HTTPHandler, Request, urlopen
+
+HTTP_PATIENCE_SEC = 1
 
 class AMQPConnection:
     def __init__(self, url, exchange_name):
@@ -61,25 +63,58 @@ class HTTPConnection:
         self._root_url = '%s/exchanges/%s' % (url, exchange_name)
 
     def publish(self, topic, message):
-        urlopen('%s/%s' % (self._root_url, topic), message)
+        url = '%s/%s' % (self._root_url, topic)
+        self._visit_url(url=url, data=message, method='POST')
 
     def subscribe(self, topic):
-        return urlopen('%s/%s' % (self._root_url, topic))
+        return self._visit_url('%s/%s' % (self._root_url, topic))
 
     def unsubscribe(self, queue):
-        pass
+        url = '%s/queues/%s' % (self._root_url, queue)
+        self._visit_url(url=url, method='DELETE')
 
     def consume(self, queue, f):
-        pass
+        url = '%s/queues/%s' % (self._root_url, queue)
+        headers = [('Patience', HTTP_PATIENCE_SEC)]
+        while True:
+            message = self._visit_url(url=url, headers=headers)
+            if len(message) > 0:
+                f(message)
 
     def get_message(self, queue):
-        pass
+        url = '%s/queues/%s' % (self._root_url, queue)
+        message = self._visit_url(url)
+        if len(message) == 0:
+            message = None
+        return message
 
     def get_all_messages(self, queue):
-        pass
+        url = '%s/queues/%s' % (self._root_url, queue)
+        headers = [('Range', 'all')]
+        result = self._visit_url(url=url, headers=headers)
+        if len(result) == 0:
+            return []
+        else:
+            return result.split('\n')
 
     def get_message_block(self, queue, timeout=None):
-        pass
+        url = '%s/queues/%s' % (self._root_url, queue)
+        headers = [('Patience', HTTP_PATIENCE_SEC)]
+        alarm = Alarm(timeout)
+        while True:
+            message = self._visit_url(url=url, headers=headers)
+            if len(message) > 0:
+                return message
+            if alarm.is_ringing():
+                return None
+
+    def _visit_url(self, url, data=None, method='GET', headers=[]):
+        opener = build_opener(HTTPHandler)
+        request = Request(url)
+        request.get_method = lambda: method
+        for header in headers:
+            request.add_header(*header)
+        return opener.open(request, data).read()
 
 connection_classes = {'amqp': AMQPConnection, 'http': HTTPConnection}
 

@@ -25,7 +25,7 @@ def topic_handler(verb, headers, content, exchange, topic):
         connection.publish(topic, content)
         return {'code': 200, 'content': ''}
     elif verb == 'GET':
-        connection = Connection(exchange)
+        connection = connect('amqp://localhost', exchange)
         queue = connection.subscribe(topic)
         return {'code': 200, 'content': queue}
     else:
@@ -39,7 +39,7 @@ def get_message_range(connection, queue, timeout, range_value):
 
 def queue_handler(verb, headers, content, exchange, queue):
     if verb == 'GET':
-        connection = Connection(exchange)
+        connection = connect('amqp://localhost', exchange)
         range_header = headers.get('Range', 'head')
         timeout = float(headers.get('Patience', 0))
         message = get_message_range(connection, queue, timeout, range_header)
@@ -47,7 +47,7 @@ def queue_handler(verb, headers, content, exchange, queue):
             message = ''
         return {'code': 200, 'content': message}
     elif verb == 'DELETE':
-        connection = Connection(exchange)
+        connection = connect('amqp://localhost', exchange)
         connection.unsubscribe(queue)
         return {'code': 200, 'content': ''}
     else:
