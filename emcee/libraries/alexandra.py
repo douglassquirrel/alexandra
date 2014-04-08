@@ -32,16 +32,17 @@ class TopicMonitor:
     def latest(self):
         return loads(self._monitor.latest())
 
-def request_game(game_name, game_id):
-    connection = connect('amqp://localhost', 'emcee')
+def request_game(game_name, game_id, pubsub_url='amqp://localhost'):
+    connection = connect(pubsub_url, 'emcee')
     game_info = {'name': game_name, 'id': game_id}
     connection.publish('game.wanted', dumps(game_info))
 
 class Alexandra:
-    def __init__(self, game_id=None, fetch_game_config=True):
+    def __init__(self, game_id=None, fetch_game_config=True,
+                 pubsub_url='amqp://localhost'):
         if game_id is None:
             game_id = argv[2]
-        self._connection = connect('amqp://localhost', game_id)
+        self._connection = connect(pubsub_url, game_id)
         self._library_url = self._get_library_url()
         self._library_files = {}
         if fetch_game_config is True:
