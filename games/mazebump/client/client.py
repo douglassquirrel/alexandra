@@ -6,6 +6,7 @@ from pygame import display, event, init, key, quit, Surface, surfarray
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
 from StringIO import StringIO
 from sys import argv, exit
+from time import time as now
 from uuid import uuid4
 
 def init_window(field_width, field_height):
@@ -15,6 +16,7 @@ def init_window(field_width, field_height):
     return window
 
 def update(window, world, alex):
+    alex.publish('heartbeat', now())
     do_world_update(window, world, alex)
     command = get_command()
     if command is not None:
