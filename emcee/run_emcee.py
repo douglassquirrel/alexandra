@@ -26,5 +26,5 @@ processes.append(Popen([pathjoin(install_dir, 'pubsub_ws.py'), infra_dir],
                        cwd=install_dir))
 
 print 'Now running'
-raw_input('Press Enter to stop')
+raw_input('Press Enter to stop\n')
 map(lambda(p): p.kill(), processes)
