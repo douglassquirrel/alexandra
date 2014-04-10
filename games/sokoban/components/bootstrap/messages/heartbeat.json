@@ -1,0 +1,7 @@
+{
+"name": "heartbeat",
+"extensions": "None",
+"content": "timestamp (seconds past the epoch)",
+"meaning": "A client has displayed game data to a user at the time indicated",
+"example": "heartbeat -> 1397072509.726804"
+}
