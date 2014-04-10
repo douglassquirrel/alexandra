@@ -34,4 +34,9 @@ print 'Installing client in %s' % (install_dir,)
 
 install_client(get_client_files(game_name), install_dir)
 executable = filter(is_executable_file, abspath_listdir(install_dir))[0]
-call([executable, game_name], cwd=install_dir)
+args = [executable, game_name]
+if len(argv) > 2:
+    pubsub_url = argv[2]
+    print 'Using pubsub URL %s' % pubsub_url
+    args.append(pubsub_url)
+call(args, cwd=install_dir)

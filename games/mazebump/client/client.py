@@ -67,6 +67,9 @@ game_id = str(uuid4())
 print "Starting client for game %s with id %s" % (game_name, game_id)
 
 request_game(game_name, game_id)
-alex = Alexandra(game_id)
+if len(argv) > 2:
+    alex = Alexandra(game_id=game_id, pubsub_url=argv[2])
+else:
+    alex = Alexandra(game_id=game_id)
 window = init_window(alex.config['field_width'], alex.config['field_height'])
 alex.consume('world', lambda w, a: update(window, w, a))
