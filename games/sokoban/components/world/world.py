@@ -8,7 +8,6 @@ movement_queue = alex.subscribe('decision_movement.*')
 
 def publish_world(tick, alex):
     world['tick'] = tick
-    world['movements'] = {}
     all_movements = movement_queue.fetch_all()
     tick_movements = filter(lambda(m): m['tick'] == tick - 1, all_movements)
     for m in tick_movements:

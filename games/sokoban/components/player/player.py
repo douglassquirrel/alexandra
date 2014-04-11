@@ -10,6 +10,7 @@ WIDTH = 20
 HEIGHT = 20
 COLOUR = [0, 255, 255]
 DELTAS = {'left': (-20, 0), 'right': (20, 0), 'up': (0, -20), 'down': (0, 20)}
+MOVE_DELAY = 5
 
 def init(alex):
     entity_data = {'width': WIDTH, 'height': HEIGHT, 'colour': COLOUR}
@@ -24,8 +25,16 @@ def update(world, commands_queue, alex):
         send_movement(position, position, world['tick'], alex)
     else:
         commands = commands_queue.fetch_all()
-        if len(commands) > 0:
+        if len(commands) > 0 and movement_ok(world):
             move(commands[-1], world, alex)
+
+def movement_ok(world):
+    if NAME not in world['movements']:
+        return True
+
+    last_movement = world['movements'][NAME]
+    time_since_last_move = world['tick'] - last_movement['tick']
+    return time_since_last_move >= MOVE_DELAY
 
 def move(command, world, alex):
     position = world['entities'][NAME]['position']
