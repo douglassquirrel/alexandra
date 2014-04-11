@@ -6,8 +6,8 @@ from sys import argv
 
 INDEX = int(argv[3])
 NAME = 'player_%d' % (INDEX,)
-WIDTH = 20
-HEIGHT = 20
+WIDTH = 18
+HEIGHT = 18
 COLOUR = [0, 255, 255]
 DELTAS = {'left': (-20, 0), 'right': (20, 0), 'up': (0, -20), 'down': (0, 20)}
 MOVE_DELAY = 5
