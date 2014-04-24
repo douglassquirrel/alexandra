@@ -2,14 +2,9 @@
 
 from alexandra import Alexandra
 
-alex = Alexandra()
-world = {'tick': 0, 'movements': {}, 'entities': {}}
-movement_queue = alex.subscribe('decision_movement.*')
-
-def publish_world(tick, alex):
+def publish_world(tick, alex, movements, world):
     world['tick'] = tick
-    all_movements = movement_queue.fetch_all()
-    tick_movements = filter(lambda(m): m['tick'] == tick - 1, all_movements)
+    tick_movements = filter(lambda(m): m['tick'] == tick - 1, movements)
     for m in tick_movements:
         entity, index, position = m['entity'], m['index'], m['to']
         name = '%s_%d' % (entity, index)
@@ -17,4 +12,13 @@ def publish_world(tick, alex):
         world['movements'][name] = m
     alex.publish('world', world)
 
-alex.consume('tick', publish_world)
+alex = Alexandra()
+movement_queue = alex.subscribe('decision_movement.*')
+world_monitor = alex.topic_monitor('world')
+initial_world = {'tick': 0, 'movements': {}, 'entities': {}}
+
+alex.consume('tick',
+             lambda t, a: publish_world(t, a,
+                                        movement_queue.fetch_all(),
+                                        world_monitor.latest()),
+             initial=lambda: alex.publish('world', initial_world))
