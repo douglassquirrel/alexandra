@@ -51,8 +51,9 @@ class Alexandra:
     def topic_monitor(self, topic):
         return TopicMonitor(self._connection, topic)
 
-    def consume(self, topic, f):
+    def consume(self, topic, f, initial=lambda: None):
         queue = Queue(self._connection, topic, self)
+        initial()
         queue.consume(f)
 
     def enter_in_library(self, data, path, content_type):
