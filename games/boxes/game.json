@@ -1,9 +1,9 @@
 {
 "field_width": 803,
 "field_height": 643,
-"player_start_x": 11,
-"player_start_y": 11,
-"box_density": 0.01,
+"grid_start_x": 10,
+"grid_start_y": 10,
+"number_boxes": 10,
 "tick_seconds": 0.1,
 "components": {"bootstrap": 1,
                "boxes": 1,
