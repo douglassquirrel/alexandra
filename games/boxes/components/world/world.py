@@ -8,7 +8,8 @@ def publish_world(tick, alex, movements, world):
     for m in tick_movements:
         entity, index, position = m['entity'], m['index'], m['to']
         name = '%s_%d' % (entity, index)
-        world['entities'][name] = {'entity': entity, 'position': position}
+        world['entities'][name] = {'entity': entity, 'index': index,
+                                   'position': position}
         world['movements'][name] = m
     alex.publish('world', world)
 

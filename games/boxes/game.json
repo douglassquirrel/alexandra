@@ -6,6 +6,7 @@
 "number_boxes": 10,
 "tick_seconds": 0.1,
 "components": {"bootstrap": 1,
+               "box_collisions": 1,
                "boxes": 1,
                "clock": 1,
                "collider": 1,
