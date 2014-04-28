@@ -15,14 +15,17 @@ def collisions(movement, entities_dict):
     return filter(None, [detector(e) for e in entities])
 
 def make_collision_detector(movement, alex):
-    moving_entity = movement['entity']
+    moving_entity, moving_index = movement['entity'], movement['index']
     moving_rect = get_rect_for(moving_entity, movement['to'], alex)
-    return lambda(e): get_collision(e, moving_entity, moving_rect, alex)
+    return lambda(e): get_collision(e, moving_entity, moving_index,
+                                    moving_rect, alex)
 
-def get_collision(entity_data, moving_entity, moving_rect, alex):
-    entity, position = entity_data['entity'], entity_data['position']
+def get_collision(entity_data, moving_entity, moving_index, moving_rect, alex):
+    entity, index, position = entity_data['entity'], entity_data['index'], \
+                              entity_data['position']
     rect = get_rect_for(entity, position, alex)
-    if entity != moving_entity and rect.intersects(moving_rect):
+    if (entity, index) != (moving_entity, moving_index) \
+            and rect.intersects(moving_rect):
         return entity_data
     else:
         return None

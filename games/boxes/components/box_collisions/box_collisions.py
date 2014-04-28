@@ -11,7 +11,6 @@ def check_movement(movement, alex):
         box_collisions(movement))
 
 def do_collision_movement(movement, collision, alex):
-    print movement
     index, from_position = collision['index'], collision['position']
     collider_from, collider_to = movement['from'], movement['to']
     delta = (collider_to[0] - collider_from[0],
