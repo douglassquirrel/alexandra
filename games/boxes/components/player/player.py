@@ -20,8 +20,8 @@ def init(alex):
 
 def update(world, commands_queue, alex):
     if NAME not in world['entities']:
-        position = (alex.config['grid_start_x'] + 1,
-                    alex.config['grid_start_y'] + 1)
+        position = (alex.config['player_start_x'],
+                    alex.config['player_start_y'])
         send_movement(position, position, world['tick'], alex)
     else:
         commands = commands_queue.fetch_all()
