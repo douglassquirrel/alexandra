@@ -16,7 +16,14 @@ module Pubsub
     end
 
     def subscribe(topic)
+      queue = @channel.queue("")
+      queue.bind(@exchange, :routing_key => topic)
+      return queue
+    end
 
+    def get_message(queue)
+      delivery_info, properties, payload = queue.pop
+      return payload
     end
   end
 
