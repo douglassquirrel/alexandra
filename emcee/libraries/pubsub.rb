@@ -25,6 +25,12 @@ module Pubsub
       queue.delete
     end
 
+    def consume(queue, &block)
+      queue.subscribe(:block => true) do |di, p, body|
+        block.call(body)
+      end
+    end
+
     def get_message(queue)
       delivery_info, properties, payload = queue.pop
       return payload
