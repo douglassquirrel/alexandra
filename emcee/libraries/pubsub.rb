@@ -35,6 +35,15 @@ module Pubsub
       delivery_info, properties, payload = queue.pop
       return payload
     end
-  end
 
+    def get_all_messages(queue)
+      messages = []
+      loop do
+        message = get_message(queue)
+        break if message == nil
+        messages.push message
+      end
+      return messages
+    end
+  end
 end
