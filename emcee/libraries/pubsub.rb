@@ -45,5 +45,31 @@ module Pubsub
       end
       return messages
     end
+
+    def get_message_block(queue, timeout=nil)
+      alarm = Alarm.new(timeout)
+      loop do
+        message = get_message(queue)
+        if message != nil
+          return message
+        elsif alarm.is_ringing()
+          return nil
+        end
+      end
+    end
+  end
+
+  class Alarm
+    def initialize(duration=nil)
+      if duration != nil
+        @alarm_time = Time.now + duration
+      else
+        @alarm_time = nil
+      end
+    end
+
+    def is_ringing()
+      @alarm_time != nil and Time.now > @alarm_time
+    end
   end
 end
