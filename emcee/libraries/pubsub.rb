@@ -59,6 +59,12 @@ module Pubsub
     end
   end
 
+  def Pubsub.connect(url, exchange_name)
+    connection_classes = {'amqp' => AMQPConnection}
+    protocol = %r{(\w+)://}.match(url)[1]
+    return connection_classes[protocol].new(url, exchange_name)
+  end
+
   class Alarm
     def initialize(duration=nil)
       if duration != nil
@@ -70,6 +76,22 @@ module Pubsub
 
     def is_ringing()
       @alarm_time != nil and Time.now > @alarm_time
+    end
+  end
+
+  class QueueMonitor
+    def initialize(connection, queue)
+      @connection = connection
+      @queue = queue
+      @latest = nil
+    end
+
+    def latest()
+      messages = @connection.get_all_messages(@queue)
+      if not messages.empty?
+        @latest = messages.last
+      end
+      return @latest
     end
   end
 end
