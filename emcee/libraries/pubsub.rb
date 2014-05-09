@@ -21,6 +21,10 @@ module Pubsub
       return queue
     end
 
+    def unsubscribe(queue)
+      queue.delete
+    end
+
     def get_message(queue)
       delivery_info, properties, payload = queue.pop
       return payload
