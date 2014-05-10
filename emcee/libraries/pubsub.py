@@ -6,8 +6,9 @@ from urllib2 import build_opener, HTTPHandler, Request, urlopen
 HTTP_PATIENCE_SEC = 1
 
 class AMQPConnection:
-    def __init__(self, url, exchange_name):
+    def __init__(self, url, exchange_name, marshal, unmarshal):
         self._exchange_name = exchange_name
+        self.marshal, self.unmarshal = marshal, unmarshal
         host = match(r"amqp://(\w+)", url).group(1)
         connection = BlockingConnection(ConnectionParameters(host))
         self._channel = connection.channel()
@@ -17,7 +18,7 @@ class AMQPConnection:
     def publish(self, topic, message):
         self._channel.basic_publish(exchange=self._exchange_name,
                                     routing_key=topic,
-                                    body=message)
+                                    body=self.marshal(message))
 
     def subscribe(self, topic):
         result = self._channel.queue_declare()
@@ -32,13 +33,17 @@ class AMQPConnection:
 
     def consume(self, queue, f):
         def callback(ch, method, properties, body):
-            f(body)
+            f(self.unmarshal(body))
 
         self._channel.basic_consume(callback, queue=queue, no_ack=True)
         self._channel.start_consuming()
 
     def get_message(self, queue):
-        return self._channel.basic_get(0, queue=queue, no_ack=True)[2]
+        raw_message = self._channel.basic_get(0, queue=queue, no_ack=True)[2]
+        if raw_message is None:
+            return None
+        else:
+            return self.unmarshal(raw_message)
 
     def get_all_messages(self, queue):
         messages = []
@@ -59,12 +64,13 @@ class AMQPConnection:
                 return None
 
 class HTTPConnection:
-    def __init__(self, url, exchange_name):
+    def __init__(self, url, exchange_name, marshal, unmarshal):
         self._root_url = '%s/exchanges/%s' % (url, exchange_name)
+        self.marshal, self.unmarshal = marshal, unmarshal
 
     def publish(self, topic, message):
         url = '%s/%s' % (self._root_url, topic)
-        self._visit_url(url=url, data=message, method='POST')
+        self._visit_url(url=url, data=self.marshal(message), method='POST')
 
     def subscribe(self, topic):
         return self._visit_url('%s/%s' % (self._root_url, topic))
@@ -79,14 +85,15 @@ class HTTPConnection:
         while True:
             message = self._visit_url(url=url, headers=headers)
             if len(message) > 0:
-                f(message)
+                f(self.unmarshal(message))
 
     def get_message(self, queue):
         url = '%s/queues/%s' % (self._root_url, queue)
         message = self._visit_url(url)
         if len(message) == 0:
-            message = None
-        return message
+            return None
+        else:
+            return self.unmarshal(message)
 
     def get_all_messages(self, queue):
         url = '%s/queues/%s' % (self._root_url, queue)
@@ -95,7 +102,7 @@ class HTTPConnection:
         if len(result) == 0:
             return []
         else:
-            return result.split('\n')
+            return map(self.unmarshal, result.split('\n'))
 
     def get_message_block(self, queue, timeout=None):
         url = '%s/queues/%s' % (self._root_url, queue)
@@ -104,7 +111,7 @@ class HTTPConnection:
         while True:
             message = self._visit_url(url=url, headers=headers)
             if len(message) > 0:
-                return message
+                return self.unmarshal(message)
             if alarm.is_ringing():
                 return None
 
@@ -117,10 +124,12 @@ class HTTPConnection:
         return opener.open(request, data).read()
 
 connection_classes = {'amqp': AMQPConnection, 'http': HTTPConnection}
+def identity(x):
+    return x
 
-def connect(url, exchange_name):
+def connect(url, exchange_name, marshal=identity, unmarshal=identity):
     protocol = match(r"(\w+)://", url).group(1)
-    return connection_classes[protocol](url, exchange_name)
+    return connection_classes[protocol](url, exchange_name, marshal, unmarshal)
 
 class Alarm:
     def __init__(self, duration):
