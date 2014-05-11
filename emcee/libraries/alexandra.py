@@ -1,36 +1,7 @@
 from json import dumps, load, loads
-from pubsub import connect, QueueMonitor
+from pubsub import connect
 from sys import argv
 from urllib2 import build_opener, HTTPHandler, Request, URLError, urlopen
-
-class Queue:
-    def __init__(self, connection, topic, alex):
-        self._connection = connection
-        self._q = self._connection.subscribe(topic)
-        self._alex = alex
-
-    def next(self):
-        message = self._connection.get_message(self._q)
-        if message is not None:
-            return loads(message)
-        else:
-            return None
-
-    def fetch_all(self):
-        return map(loads, self._connection.get_all_messages(self._q))
-
-    def consume(self, f):
-        def callback(message):
-            return f(loads(message), self._alex)
-        self._connection.consume(self._q, callback)
-
-class TopicMonitor:
-    def __init__(self, connection, topic):
-        queue = connection.subscribe(topic)
-        self._monitor = QueueMonitor(connection, queue)
-
-    def latest(self):
-        return loads(self._monitor.latest())
 
 def request_game(game_name, game_id, pubsub_url='amqp://localhost'):
     connection = connect(pubsub_url, 'emcee')
@@ -42,19 +13,12 @@ class Alexandra:
                  pubsub_url='amqp://localhost'):
         if game_id is None:
             game_id = argv[2]
-        self._connection = connect(pubsub_url, game_id)
+        self.pubsub = connect(pubsub_url, game_id,
+                              marshal=dumps, unmarshal=loads)
         self._library_url = self._get_library_url()
         self._library_files = {}
         if fetch_game_config is True:
             self._wait_for_game_config()
-
-    def topic_monitor(self, topic):
-        return TopicMonitor(self._connection, topic)
-
-    def consume(self, topic, f, initial=lambda: None):
-        queue = Queue(self._connection, topic, self)
-        initial()
-        queue.consume(f)
 
     def enter_in_library(self, data, path, content_type):
         opener = build_opener(HTTPHandler)
@@ -81,20 +45,10 @@ class Alexandra:
     def is_in_library(self, path):
         return self.get_library_file(path) is not None
 
-    def publish(self, topic, message):
-        main_topic = topic.split('.')[0]
-        if self.is_in_library('/messages/%s.json' % main_topic):
-            self._connection.publish(topic, dumps(message))
-        else:
-            print "Refused to publish %s, no documentation" % topic
-
-    def subscribe(self, topic):
-        return Queue(self._connection, topic, self)
-
     def _get_library_url(self):
-        library_url_queue = self._connection.subscribe('library_url')
-        library_url = self._connection.get_message_block(library_url_queue)
-        self._connection.unsubscribe(library_url_queue)
+        library_url_queue = self.pubsub.subscribe('library_url')
+        library_url = self.pubsub.get_message_block(library_url_queue)
+        self.pubsub.unsubscribe(library_url_queue)
         return library_url
 
     def _wait_for_game_config(self):

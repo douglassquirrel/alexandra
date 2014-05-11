@@ -22,7 +22,8 @@ def do_collision_movement(movement, collision, alex):
     box_movement = {'tick': movement['tick'],
                     'entity': 'box', 'index': index,
                     'from': from_position, 'to': to_position}
-    alex.publish('movement.box', box_movement)
+    alex.pubsub.publish('movement.box', box_movement)
 
 alex = Alexandra()
-alex.consume('movement_with_collisions.*', check_movement)
+alex.pubsub.consume_topic('movement_with_collisions.*',
+                          lambda m: check_movement(m, alex))

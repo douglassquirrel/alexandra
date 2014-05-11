@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-from json import load
+from json import load, dumps
 from os.path import join as pathjoin
 from pubsub import connect
 from sys import argv
@@ -20,7 +20,7 @@ def publish_url(host, port):
     url = 'http://%s:%d' % (host, port)
 
     while is_responsive(url + '/index.html'):
-        connection.publish(topic='library_url', message=url)
+        connection.publish(topic='library_url', message=dumps(url))
         sleep(1)
 
 config_dir = argv[1]

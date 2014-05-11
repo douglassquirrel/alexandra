@@ -23,7 +23,8 @@ def filter_movement(movement, alex):
                          'entity': entity,
                          'index': movement['index'],
                          'from': from_position, 'to': new_position}
-    alex.publish('decision_movement.' + entity, approved_movement)
+    alex.pubsub.publish('decision_movement.' + entity, approved_movement)
 
 alex = Alexandra()
-alex.consume('movement_with_collisions.*', filter_movement)
+alex.pubsub.consume_topic('movement_with_collisions.*',
+                          lambda m: filter_movement(m, alex))

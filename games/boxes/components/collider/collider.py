@@ -6,8 +6,8 @@ from vector import Vector, Rect
 
 def add_collisions(movement, world, alex):
     movement['collisions'] = collisions(movement, world['entities'])
-    alex.publish('movement_with_collisions.' + movement['entity'],
-                 movement)
+    alex.pubsub.publish('movement_with_collisions.' + movement['entity'],
+                        movement)
 
 def collisions(movement, entities_dict):
     entities = entities_dict.values()
@@ -41,6 +41,6 @@ def get_dimensions(entity, library_url):
     return (data['width'], data['height'])
 
 alex = Alexandra()
-world_monitor = alex.topic_monitor('world')
-alex.consume('movement.*',
-             lambda m, a: add_collisions(m, world_monitor.latest(), a))
+world_monitor = alex.pubsub.make_topic_monitor('world')
+alex.pubsub.consume_topic('movement.*',
+                 lambda m: add_collisions(m, world_monitor.latest(), alex))

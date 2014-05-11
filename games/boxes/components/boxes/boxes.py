@@ -41,8 +41,8 @@ def send_movement(index, from_position, to_position, tick, alex):
     movement = {'tick': tick,
                 'entity': 'box', 'index': index,
                 'from': from_position, 'to': to_position}
-    alex.publish('movement.box', movement)
+    alex.pubsub.publish('movement.box', movement)
 
 alex = Alexandra()
 initial_positions = init(alex)
-alex.consume('world', lambda w, a: place(w, a, initial_positions))
+alex.pubsub.consume_topic('world', lambda w: place(w, alex, initial_positions))

@@ -40,5 +40,4 @@ def start_game(message, games_dir, libraries_dir, infra_dir):
 
 games_dir, libraries_dir, infra_dir = argv[1], argv[2], argv[3]
 connection = connect('amqp://localhost', 'emcee')
-queue = connection.subscribe('game.wanted')
-connection.consume(queue, lambda(m): start_game(m, games_dir, libraries_dir, infra_dir))
+connection.consume_topic('game.wanted', lambda(m): start_game(m, games_dir, libraries_dir, infra_dir))

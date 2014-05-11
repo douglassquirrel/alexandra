@@ -31,12 +31,16 @@ class AMQPConnection:
     def unsubscribe(self, queue):
         self._channel.queue_delete(callback=None, queue=queue)
 
-    def consume(self, queue, f):
+    def consume_queue(self, queue, f):
         def callback(ch, method, properties, body):
             f(self.unmarshal(body))
 
         self._channel.basic_consume(callback, queue=queue, no_ack=True)
         self._channel.start_consuming()
+
+    def consume_topic(self, topic, f):
+        queue = self.subscribe(topic)
+        self.consume_queue(queue, f)
 
     def get_message(self, queue):
         raw_message = self._channel.basic_get(0, queue=queue, no_ack=True)[2]
@@ -63,6 +67,9 @@ class AMQPConnection:
             if alarm.is_ringing():
                 return None
 
+    def make_topic_monitor(self, topic):
+        return TopicMonitor(self, topic)
+
 class HTTPConnection:
     def __init__(self, url, exchange_name, marshal, unmarshal):
         self._root_url = '%s/exchanges/%s' % (url, exchange_name)
@@ -79,13 +86,17 @@ class HTTPConnection:
         url = '%s/queues/%s' % (self._root_url, queue)
         self._visit_url(url=url, method='DELETE')
 
-    def consume(self, queue, f):
+    def consume_queue(self, queue, f):
         url = '%s/queues/%s' % (self._root_url, queue)
         headers = [('Patience', HTTP_PATIENCE_SEC)]
         while True:
             message = self._visit_url(url=url, headers=headers)
             if len(message) > 0:
                 f(self.unmarshal(message))
+
+    def consume_topic(self, topic, f):
+        queue = self.subscribe(topic)
+        self.consume_queue(queue, f)
 
     def get_message(self, queue):
         url = '%s/queues/%s' % (self._root_url, queue)
@@ -115,6 +126,9 @@ class HTTPConnection:
             if alarm.is_ringing():
                 return None
 
+    def make_topic_monitor(self, topic):
+        return TopicMonitor(self, topic)
+
     def _visit_url(self, url, data=None, method='GET', headers=[]):
         opener = build_opener(HTTPHandler)
         request = Request(url)
@@ -141,10 +155,10 @@ class Alarm:
     def is_ringing(self):
         return self.alarm_time is not None and now() > self.alarm_time
 
-class QueueMonitor:
-    def __init__(self, connection, queue):
+class TopicMonitor:
+    def __init__(self, connection, topic):
         self._connection = connection
-        self._queue = queue
+        self._queue = connection.subscribe(topic)
         self._latest = None
 
     def latest(self):

@@ -42,8 +42,8 @@ def send_movement(from_position, to_position, tick, alex):
     movement = {'tick': tick,
                 'entity': 'opponent_random', 'index': INDEX,
                 'from': from_position, 'to': to_position}
-    alex.publish('movement.opponent_random', movement)
+    alex.pubsub.publish('movement.opponent_random', movement)
 
 alex = Alexandra()
 init(alex)
-alex.consume('world', move)
+alex.pubsub.consume_topic('world', lambda w: move(w, alex))

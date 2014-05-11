@@ -48,10 +48,10 @@ def send_movement(position, orientation, index, tick, alex):
     movement = {'tick': tick,
                 'entity': entity, 'index': index,
                 'from': position, 'to': position}
-    alex.publish('movement.' + name, movement)
+    alex.pubsub.publish('movement.' + name, movement)
 
 alex = Alexandra()
 init(alex)
 walls = list(make_maze(alex.config['field_width']/CELL_WIDTH,
                        alex.config['field_height']/CELL_WIDTH))
-alex.consume('world', lambda w, a: draw(walls, w, a))
+alex.pubsub.consume_topic('world', lambda w: draw(walls, w, alex))

@@ -16,11 +16,11 @@ def init_window(field_width, field_height):
     return window
 
 def update(window, world, alex):
-    alex.publish('heartbeat', now())
+    alex.pubsub.publish('heartbeat', now())
     do_world_update(window, world, alex)
     command = get_command()
     if command is not None:
-        alex.publish('commands.player', command)
+        alex.pubsub.publish('commands.player', command)
     check_quit()
 
 def check_quit():
@@ -72,4 +72,4 @@ if len(argv) > 2:
 else:
     alex = Alexandra(game_id=game_id)
 window = init_window(alex.config['field_width'], alex.config['field_height'])
-alex.consume('world', lambda w, a: update(window, w, a))
+alex.pubsub.consume_topic('world', lambda w: update(window, w, alex))

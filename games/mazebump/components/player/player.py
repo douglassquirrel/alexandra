@@ -15,7 +15,7 @@ def init(alex):
     entity_data = {'width': WIDTH, 'height': HEIGHT, 'colour': COLOUR}
     alex.enter_in_library(dumps(entity_data),
                           '/player/player.json', 'application/json')
-    return alex.subscribe('commands.player')
+    return alex.pubsub.subscribe('commands.player')
 
 def update(world, commands_queue, alex):
     if NAME not in world['entities']:
@@ -23,7 +23,7 @@ def update(world, commands_queue, alex):
                     alex.config['player_start_y'])
         send_movement(position, position, world['tick'], alex)
     else:
-        commands = commands_queue.fetch_all()
+        commands = alex.pubsub.get_all_messages(commands_queue)
         if len(commands) > 0:
             move(commands[-1], world, alex)
 
@@ -40,8 +40,8 @@ def send_movement(from_position, to_position, tick, alex):
     movement = {'tick': tick,
                 'entity': 'player', 'index': INDEX,
                 'from': from_position, 'to': to_position}
-    alex.publish('movement.player', movement)
+    alex.pubsub.publish('movement.player', movement)
 
 alex = Alexandra()
 commands_queue = init(alex)
-alex.consume('world', lambda w, a: update(w, commands_queue, a))
+alex.pubsub.consume_topic('world', lambda w: update(w, commands_queue, alex))
