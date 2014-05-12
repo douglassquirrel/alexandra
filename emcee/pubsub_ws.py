@@ -1,7 +1,6 @@
 #! /usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from json import load
 from os.path import join as pathjoin
 from pubsub import connect
 from re import match
@@ -107,13 +106,6 @@ class PubSubHandler(BaseHTTPRequestHandler):
 class ForkingHTTPServer(ForkingMixIn, HTTPServer):
     pass
 
-def run_server(host, port):
-    server = ForkingHTTPServer((host, port), PubSubHandler)
-    server.serve_forever()
-
-config_dir = argv[1]
-config_file_path = pathjoin(config_dir, 'infra.json')
-with open(config_file_path, 'r') as config_file:
-    config = load(config_file)
-host, port = config['pubsub_host'], config['pubsub_port']
-run_server(host, port)
+host, port = argv[1], int(argv[2])
+server = ForkingHTTPServer((host, port), PubSubHandler)
+server.serve_forever()
