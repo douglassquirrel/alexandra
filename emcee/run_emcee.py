@@ -6,7 +6,7 @@ from shutil import copy
 from subprocess import Popen
 from tempfile import mkdtemp
 
-INFRA_FILES = ['emcee.py', 'pubsub_ws.py',
+INFRA_FILES = ['emcee.py', 'http_docstore.py', 'pubsub_ws.py',
                'pubsub_ws_doc.html', pathjoin('libraries', 'pubsub.py')]
 
 install_dir = mkdtemp(prefix='emcee.')
@@ -23,10 +23,14 @@ map(lambda f: copy(f, install_dir), INFRA_FILES)
 config_file_path = pathjoin(infra_dir, 'infra.json')
 with open(config_file_path, 'r') as config_file:
     config = load(config_file)
-pubsub_host, pubsub_port = config['pubsub_host'], str(config['pubsub_port'])
+docstore_host = config['docstore_host']
+docstore_port = str(config['docstore_port'])
+pubsub_host = config['pubsub_host']
+pubsub_port = str(config['pubsub_port'])
 
-options = {'emcee.py':     [games_dir, libraries_dir, infra_dir],
-           'pubsub_ws.py': [pubsub_host, pubsub_port]}
+options = {'emcee.py':         [games_dir, libraries_dir, infra_dir],
+           'http_docstore.py': [docstore_host, docstore_port],
+           'pubsub_ws.py':     [pubsub_host, pubsub_port]}
 
 def start_process(filename):
     return Popen([pathjoin(install_dir, filename)] + options[filename],

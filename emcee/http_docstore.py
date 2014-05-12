@@ -89,9 +89,5 @@ def run_server(host, port, resources):
     server = HTTPServerWithResources((host, port), LibraryHandler, resources)
     server.serve_forever()
 
-config_dir = argv[1]
-config_file_path = pathjoin(config_dir, 'infra.json')
-with open(config_file_path, 'r') as config_file:
-    config = load(config_file)
-host, port = config['library_host'], config['library_port']
+host, port = argv[1], int(argv[2])
 run_server(host, port, Resources())

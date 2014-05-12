@@ -10,8 +10,6 @@
                "boxes": 1,
                "clock": 1,
                "collider": 1,
-               "library": 1,
-               "library_advertiser": 1,
                "player": 1,
                "umpire": 1,
                "walls": 1,
