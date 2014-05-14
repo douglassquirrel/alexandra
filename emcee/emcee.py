@@ -26,6 +26,7 @@ def install_game(game_dir, install_dir, libraries_dir, infra_dir):
         full_path_listdir(installed_components_dir))
 
     map(lambda(f): copy(f, install_dir), full_path_listdir(infra_dir))
+    copy(pathjoin(libraries_dir, 'docstore.py'), install_dir)
     copy(pathjoin(libraries_dir, 'pubsub.py'), install_dir)
 
 def start_game(message, games_dir, libraries_dir, infra_dir):
@@ -36,7 +37,9 @@ def start_game(message, games_dir, libraries_dir, infra_dir):
 
     print 'Running game %s in %s using id %s' % (name, install_dir, id)
     install_game(game_dir, install_dir, libraries_dir, infra_dir)
-    call([pathjoin(install_dir, 'run.py'), id], cwd=install_dir)
+    #read infra.json instead
+    call([pathjoin(install_dir, 'run.py'), id, 'http://localhost:8080'],
+         cwd=install_dir)
 
 games_dir, libraries_dir, infra_dir = argv[1], argv[2], argv[3]
 connection = connect('amqp://localhost', 'emcee')

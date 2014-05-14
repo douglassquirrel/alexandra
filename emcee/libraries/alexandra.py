@@ -3,10 +3,18 @@ from json import dumps, loads
 from pubsub import connect as pubsub_connect
 from sys import argv
 
-def request_game(game_name, game_id, pubsub_url='amqp://localhost'):
-    connection = pubsub_connect(pubsub_url, 'emcee')
+DEFAULT_GAME_TIMEOUT = 5
+
+def request_game(game_name, game_id, pubsub_url='amqp://localhost',
+                 timeout=DEFAULT_GAME_TIMEOUT):
+    emcee_pubsub = pubsub_connect(pubsub_url, 'emcee')
+    game_pubsub = pubsub_connect(pubsub_url, game_id)
+    game_state_queue = game_pubsub.subscribe('game_state')
+
     game_info = {'name': game_name, 'id': game_id}
-    connection.publish('game.wanted', dumps(game_info))
+    emcee_pubsub.publish('game.wanted', dumps(game_info))
+
+    return game_pubsub.get_message_block(game_state_queue, timeout) is not None
 
 class Alexandra:
     def __init__(self, game_id=None, fetch_game_config=True,
@@ -18,11 +26,4 @@ class Alexandra:
         self.pubsub = pubsub_connect(pubsub_url, game_id,
                                      marshal=dumps, unmarshal=loads)
         self.docstore = docstore_connect(docstore_url + "/" + game_id)
-        if fetch_game_config is True:
-            self._wait_for_game_config()
-
-    def _wait_for_game_config(self):
-        config_file = None
-        while config_file is None:
-            config_file = self.docstore.get('/game.json')
-        self.config = loads(config_file)
+        self.config = loads(self.docstore.get('/game.json'))

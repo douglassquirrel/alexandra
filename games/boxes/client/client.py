@@ -66,7 +66,10 @@ game_name = argv[1]
 game_id = str(uuid4())
 print "Starting client for game %s with id %s" % (game_name, game_id)
 
-request_game(game_name, game_id)
+if request_game(game_name, game_id) is False:
+    print "Could not start game"
+    exit(1)
+
 if len(argv) > 2:
     alex = Alexandra(game_id=game_id, pubsub_url=argv[2])
 else:
