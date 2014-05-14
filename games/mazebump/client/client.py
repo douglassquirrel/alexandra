@@ -49,7 +49,7 @@ def do_world_update(window, world, alex):
 
 def do_entity_update(entity_data, window, alex):
     entity, position = entity_data['entity'], entity_data['position']
-    entity_data = loads(alex.get_library_file('/%s/%s.json' % (entity, entity)))
+    entity_data = loads(alex.docstore.get('/%s/%s.json' % (entity, entity)))
     width, height = entity_data['width'], entity_data['height']
     colour = list(entity_data['colour'])
     draw_rectangle(width, height, colour, position, window)

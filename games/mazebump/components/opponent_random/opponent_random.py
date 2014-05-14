@@ -13,10 +13,10 @@ COLOUR = [255, 0, 0]
 DELTAS = [(-5, 0), (5, 0), (0, -5), (0, 5)]
 
 def init(alex):
-    alex.enter_in_library(dumps({'width': WIDTH, 'height': HEIGHT,
-                                 'colour': COLOUR}),
-                          '/opponent_random/opponent_random.json',
-                          'application/json')
+    alex.docstore.put(dumps({'width': WIDTH, 'height': HEIGHT,
+                             'colour': COLOUR}),
+                      '/opponent_random/opponent_random.json',
+                      'application/json')
 
 def move(world, alex):
     if NAME not in world['entities']:

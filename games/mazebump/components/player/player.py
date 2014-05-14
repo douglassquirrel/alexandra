@@ -13,8 +13,8 @@ DELTAS = {'left': (-5, 0), 'right': (5, 0), 'up': (0, -5), 'down': (0, 5)}
 
 def init(alex):
     entity_data = {'width': WIDTH, 'height': HEIGHT, 'colour': COLOUR}
-    alex.enter_in_library(dumps(entity_data),
-                          '/player/player.json', 'application/json')
+    alex.docstore.put(dumps(entity_data),
+                      '/player/player.json', 'application/json')
     return alex.pubsub.subscribe('commands.player')
 
 def update(world, commands_queue, alex):

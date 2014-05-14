@@ -32,7 +32,7 @@ def add_message_doc(filename, alex):
     with open(path, 'r') as json_file:
         message_info = load(json_file)
         html = DOC_TEMPLATE % message_info
-        alex.enter_in_library(html, '/messages/' + filename, 'text/html')
+        alex.docstore.put(html, '/messages/' + filename, 'text/html')
 
 alex = Alexandra(fetch_game_config=False)
 map(lambda(d): add_message_doc(d, alex), listdir(MESSAGES_FOLDER))
@@ -40,4 +40,4 @@ config_dir = argv[1]
 game_file_path = pathjoin(config_dir, 'game.json')
 with open(game_file_path, 'r') as game_file:
     game_data = game_file.read()
-    alex.enter_in_library(game_data, '/game.json', 'application/json')
+    alex.docstore.put(game_data, '/game.json', 'application/json')

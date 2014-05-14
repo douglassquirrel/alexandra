@@ -12,10 +12,10 @@ COLOUR = [25, 170, 0]
 DELTAS = [(-20, 0), (20, 0), (0, 20), (0, 20)]
 
 def init(alex):
-    alex.enter_in_library(dumps({'width': WIDTH, 'height': HEIGHT,
-                                 'colour': COLOUR}),
-                          '/box/box.json',
-                          'application/json')
+    alex.docstore.put(dumps({'width': WIDTH, 'height': HEIGHT,
+                             'colour': COLOUR}),
+                      '/box/box.json',
+                      'application/json')
     initial_positions = set()
     while len(initial_positions) < alex.config['number_boxes']:
         initial_positions.add(random_start_position(alex))
