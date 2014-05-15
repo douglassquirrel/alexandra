@@ -38,7 +38,8 @@ def start_game(message, games_dir, libraries_dir, infra_dir):
     print 'Running game %s in %s using id %s' % (name, install_dir, id)
     install_game(game_dir, install_dir, libraries_dir, infra_dir)
     #read infra.json instead
-    call([pathjoin(install_dir, 'run.py'), id, 'http://localhost:8080'],
+    call([pathjoin(install_dir, 'run_components.py'),
+          id, 'http://localhost:8080'],
          cwd=install_dir)
 
 games_dir, libraries_dir, infra_dir = argv[1], argv[2], argv[3]
