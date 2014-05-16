@@ -28,6 +28,7 @@ def install_game(game_dir, install_dir, libraries_dir, infra_dir):
     map(lambda(f): copy(f, install_dir), full_path_listdir(infra_dir))
     copy(pathjoin(libraries_dir, 'docstore.py'), install_dir)
     copy(pathjoin(libraries_dir, 'pubsub.py'), install_dir)
+    copy(pathjoin(libraries_dir, 'shepherd.py'), install_dir)
 
 def start_game(message, games_dir, libraries_dir, infra_dir):
     game_info = loads(message)

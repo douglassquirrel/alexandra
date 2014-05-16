@@ -11,7 +11,7 @@ def full_path_listdir(d):
     return [pathjoin(d, name) for name in listdir(d)]
 
 def copy_libraries_to(dest_dir):
-    libraries_dir = pathjoin(abspath('..'), 'services', 'libraries')
+    libraries_dir = pathjoin(abspath('..'), 'libraries')
     map(lambda(p): copy(p, dest_dir), full_path_listdir(libraries_dir))
 
 def abspath_listdir(d):
