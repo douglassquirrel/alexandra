@@ -42,7 +42,8 @@ pubsub_url = config['pubsub_url']
 def add_service(herd, executable, options):
     herd.add(pathjoin(install_dir, executable), options, install_dir)
 
-options = {'emcee.py':                [games_dir, libraries_dir, infra_dir],
+options = {'emcee.py':                [games_dir, libraries_dir, infra_dir,
+                                       docstore_url],
            'docstore_server_http.py': [docstore_host, docstore_port],
            'pubsub_ws.py':            [pubsub_host, pubsub_port, docstore_url]}
 

@@ -31,7 +31,7 @@ def install_game(game_dir, install_dir, libraries_dir, infra_dir):
     copy(pathjoin(libraries_dir, 'pubsub.py'), install_dir)
     copy(pathjoin(libraries_dir, 'shepherd.py'), install_dir)
 
-def start_game(message, games_dir, libraries_dir, infra_dir):
+def start_game(message, games_dir, libraries_dir, infra_dir, docstore_url):
     game_info = loads(message)
     name, id = game_info['name'], game_info['id']
     game_dir = abspath(pathjoin(games_dir, name))
@@ -39,17 +39,15 @@ def start_game(message, games_dir, libraries_dir, infra_dir):
 
     print 'Running game %s in %s using id %s' % (name, install_dir, id)
     install_game(game_dir, install_dir, libraries_dir, infra_dir)
-    #read infra.json instead
-    call([pathjoin(install_dir, 'run_components.py'),
-          id, 'http://localhost:8080'],
+    call([pathjoin(install_dir, 'run_components.py'), id, docstore_url],
          cwd=install_dir)
 
-games_dir, libraries_dir, infra_dir = argv[1], argv[2], argv[3]
+games_dir, libraries_dir, infra_dir, docstore_url = argv[1:5]
 
-docstore = docstore_connect('http://localhost:8080')
+docstore = docstore_connect(docstore_url)
 pubsub_url = docstore.wait_and_get('/services/pubsub')
 if pubsub_url is None:
     print 'No pubsub data on docstore, exiting'
     exit(1)
 pubsub = pubsub_connect(pubsub_url, 'emcee')
-pubsub.consume_topic('game.wanted', lambda m: start_game(m, games_dir, libraries_dir, infra_dir))
+pubsub.consume_topic('game.wanted', lambda m: start_game(m, games_dir, libraries_dir, infra_dir, docstore_url))
