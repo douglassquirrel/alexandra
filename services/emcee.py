@@ -1,9 +1,10 @@
 #! /usr/bin/python
 
+from docstore import connect as docstore_connect
 from json import loads
 from os import listdir
 from os.path import abspath, join as pathjoin
-from pubsub import connect
+from pubsub import connect as pubsub_connect
 from shutil import copy, copytree
 from subprocess import call
 from sys import argv
@@ -44,5 +45,11 @@ def start_game(message, games_dir, libraries_dir, infra_dir):
          cwd=install_dir)
 
 games_dir, libraries_dir, infra_dir = argv[1], argv[2], argv[3]
-connection = connect('amqp://localhost', 'emcee')
-connection.consume_topic('game.wanted', lambda(m): start_game(m, games_dir, libraries_dir, infra_dir))
+
+docstore = docstore_connect('http://localhost:8080')
+pubsub_url = docstore.wait_and_get('/services/pubsub')
+if pubsub_url is None:
+    print 'No pubsub data on docstore, exiting'
+    exit(1)
+pubsub = pubsub_connect(pubsub_url, 'emcee')
+pubsub.consume_topic('game.wanted', lambda m: start_game(m, games_dir, libraries_dir, infra_dir))

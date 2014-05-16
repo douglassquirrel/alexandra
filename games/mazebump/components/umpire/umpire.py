@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 from alexandra import Alexandra
+from sys import argv
 
 def check_movement(movement, alex):
     return movement['to'][0] >= 0 \
@@ -25,6 +26,6 @@ def filter_movement(movement, alex):
                          'from': from_position, 'to': new_position}
     alex.pubsub.publish('decision_movement.' + entity, approved_movement)
 
-alex = Alexandra()
+alex = Alexandra(argv[1], argv[2])
 alex.pubsub.consume_topic('movement_with_collisions.*',
                           lambda m: filter_movement(m, alex))

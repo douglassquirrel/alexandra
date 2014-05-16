@@ -5,8 +5,7 @@ from sys import argv
 
 DEFAULT_GAME_TIMEOUT = 5
 
-def request_game(game_name, game_id, pubsub_url='amqp://localhost',
-                 timeout=DEFAULT_GAME_TIMEOUT):
+def request_game(game_name, game_id, pubsub_url, timeout=DEFAULT_GAME_TIMEOUT):
     emcee_pubsub = pubsub_connect(pubsub_url, 'emcee')
     game_pubsub = pubsub_connect(pubsub_url, game_id)
     game_state_queue = game_pubsub.subscribe('game_state')
@@ -17,12 +16,10 @@ def request_game(game_name, game_id, pubsub_url='amqp://localhost',
     return game_pubsub.get_message_block(game_state_queue, timeout) is not None
 
 class Alexandra:
-    def __init__(self, game_id=None, fetch_game_config=True,
-                 docstore_url='http://localhost:8080',
-                 pubsub_url='amqp://localhost'):
-        if game_id is None:
-            game_id = argv[2]
+    def __init__(self, docstore_url, game_id, pubsub_url=None):
         self.game_id = game_id
+        if pubsub_url is None:
+            pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
         self.pubsub = pubsub_connect(pubsub_url, game_id,
                                      marshal=dumps, unmarshal=loads)
         self.docstore = docstore_connect(docstore_url + "/" + game_id)

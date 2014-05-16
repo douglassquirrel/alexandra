@@ -1,7 +1,0 @@
-{
-"name": "commands",
-"extensions": "entity type",
-"content": "JSON-encoded string, one of 'up', 'down', 'left', or 'right'",
-"meaning": "Movement command from a player to the named entity",
-"example": "commands.player -> \"left\""
-}

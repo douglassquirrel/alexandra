@@ -28,15 +28,15 @@ def install_client(client_files, install_client_dir):
     map(lambda(f): copy(f, install_client_dir), client_files)
     copy_libraries_to(install_client_dir)
 
-game_name = argv[1]
+docstore_url, game_name = argv[1], argv[2]
 install_dir = mkdtemp(prefix=game_name + '-client.')
 print 'Installing client in %s' % (install_dir,)
 
 install_client(get_client_files(game_name), install_dir)
 executable = filter(is_executable_file, abspath_listdir(install_dir))[0]
-args = [executable, game_name]
-if len(argv) > 2:
-    pubsub_url = argv[2]
+args = [executable, docstore_url, game_name]
+if len(argv) > 3:
+    pubsub_url = argv[3]
     print 'Using pubsub URL %s' % pubsub_url
     args.append(pubsub_url)
 call(args, cwd=install_dir)

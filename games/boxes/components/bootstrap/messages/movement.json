@@ -1,7 +1,0 @@
-{
-"name": "movement",
-"extensions": "entity type",
-"content": "JSON-encoded dictionary with these key-value pairs - 'entity': string, 'index': integer, 'from': (integer, integer), and 'to': (integer: integer)",
-"meaning": "Movement requested by the entity of type 'entity' with index 'index', from the 'from' location to the 'to' location (both given as (x,y) co-ordinates)",
-"example": "movement.player -> {\"index\": 0, \"from\": [10, 75], \"to\": [10, 80], \"entity\": \"player\"}"
-}

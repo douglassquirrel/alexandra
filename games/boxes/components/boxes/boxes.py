@@ -3,6 +3,7 @@
 from alexandra import Alexandra
 from json import dumps
 from random import choice as randomchoice
+from sys import argv
 
 WIDTH = 15
 HEIGHT = 15
@@ -43,6 +44,6 @@ def send_movement(index, from_position, to_position, tick, alex):
                 'from': from_position, 'to': to_position}
     alex.pubsub.publish('movement.box', movement)
 
-alex = Alexandra()
+alex = Alexandra(argv[1], argv[2])
 initial_positions = init(alex)
 alex.pubsub.consume_topic('world', lambda w: place(w, alex, initial_positions))

@@ -1,7 +1,0 @@
-{
-"name": "tick",
-"extensions": "none",
-"content": "JSON-encoded integer",
-"meaning": "Number of ticks since game start",
-"example": "1234"
-}

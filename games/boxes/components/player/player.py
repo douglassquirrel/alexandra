@@ -51,6 +51,6 @@ def send_movement(from_position, to_position, tick, alex):
                 'from': from_position, 'to': to_position}
     alex.pubsub.publish('movement.player', movement)
 
-alex = Alexandra()
+alex = Alexandra(argv[1], argv[2])
 commands_queue = init(alex)
 alex.pubsub.consume_topic('world', lambda w: update(w, commands_queue, alex))

@@ -3,6 +3,7 @@
 from alexandra import Alexandra
 from json import dumps
 from maze import make_maze
+from sys import argv
 
 H_WIDTH = 80
 H_HEIGHT = 3
@@ -50,7 +51,7 @@ def send_movement(position, orientation, index, tick, alex):
                 'from': position, 'to': position}
     alex.pubsub.publish('movement.' + name, movement)
 
-alex = Alexandra()
+alex = Alexandra(argv[1], argv[2])
 init(alex)
 walls = list(make_maze(alex.config['field_width']/CELL_WIDTH,
                        alex.config['field_height']/CELL_WIDTH))

@@ -44,6 +44,6 @@ def send_movement(from_position, to_position, tick, alex):
                 'from': from_position, 'to': to_position}
     alex.pubsub.publish('movement.opponent_random', movement)
 
-alex = Alexandra()
+alex = Alexandra(argv[1], argv[2])
 init(alex)
 alex.pubsub.consume_topic('world', lambda w: move(w, alex))

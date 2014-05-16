@@ -1,8 +1,9 @@
 #! /usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from docstore import connect as docstore_connect
 from os.path import join as pathjoin
-from pubsub import connect
+from pubsub import connect as pubsub_connect
 from re import match
 from SocketServer import ForkingMixIn
 from sys import argv
@@ -18,36 +19,40 @@ def root_handler(verb, headers, content):
         doc_html = f.read()
     return {'code': 200, 'content': doc_html, 'type': 'text/html'}
 
-def topic_handler(verb, headers, content, exchange, topic):
+def topic_handler(verb, headers, content, docstore_url, exchange, topic):
     if verb == 'POST':
-        connection = connect('amqp://localhost', exchange)
-        connection.publish(topic, content)
+        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+        pubsub = pubsub_connect(pubsub_url, exchange)
+        pubsub.publish(topic, content)
         return {'code': 200, 'content': ''}
     elif verb == 'GET':
-        connection = connect('amqp://localhost', exchange)
-        queue = connection.subscribe(topic)
+        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+        pubsub = pubsub_connect(pubsub_url, exchange)
+        queue = pubsub.subscribe(topic)
         return {'code': 200, 'content': queue}
     else:
         return wrong_verb(expected='GET or POST', got=verb)
 
-def get_message_range(connection, queue, timeout, range_value):
+def get_message_range(pubsub, queue, timeout, range_value):
     if range_value == 'head':
-        return connection.get_message_block(queue, timeout)
+        return pubsub.get_message_block(queue, timeout)
     elif range_value == 'all':
-        return '\n'.join(connection.get_all_messages(queue))
+        return '\n'.join(pubsub.get_all_messages(queue))
 
-def queue_handler(verb, headers, content, exchange, queue):
+def queue_handler(verb, headers, content, docstore_url, exchange, queue):
     if verb == 'GET':
-        connection = connect('amqp://localhost', exchange)
+        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+        pubsub = pubsub_connect(pubsub_url, exchange)
         range_header = headers.get('Range', 'head')
         timeout = float(headers.get('Patience', 0))
-        message = get_message_range(connection, queue, timeout, range_header)
+        message = get_message_range(pubsub, queue, timeout, range_header)
         if message is None:
             message = ''
         return {'code': 200, 'content': message}
     elif verb == 'DELETE':
-        connection = connect('amqp://localhost', exchange)
-        connection.unsubscribe(queue)
+        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+        pubsub = pubsub_connect(pubsub_url, exchange)
+        pubsub.unsubscribe(queue)
         return {'code': 200, 'content': ''}
     else:
         return wrong_verb(expected='DELETE or GET', got=verb)
@@ -66,7 +71,8 @@ class PubSubHandler(BaseHTTPRequestHandler):
             matched = matches[0]
             params = matched[0].groups()
             handler = matched[1]
-            return lambda v, h, c: handler(v, h, c, *params)
+            docstore_url = self.server.docstore_url
+            return lambda v, h, c, d: handler(v, h, c, docstore_url, *params)
 
     def do_GET(self):
         self._do_request('GET')
@@ -108,4 +114,5 @@ class ForkingHTTPServer(ForkingMixIn, HTTPServer):
 
 host, port = argv[1], int(argv[2])
 server = ForkingHTTPServer((host, port), PubSubHandler)
+server.docstore_url = argv[3]
 server.serve_forever()

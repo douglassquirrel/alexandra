@@ -2,6 +2,7 @@
 
 from alexandra import Alexandra
 from json import loads
+from sys import argv
 from vector import Vector, Rect
 
 def add_collisions(movement, world, alex):
@@ -40,7 +41,7 @@ def get_dimensions(entity, library_url):
     data = loads(alex.docstore.get('/%s/%s.json' % (entity, entity)))
     return (data['width'], data['height'])
 
-alex = Alexandra()
+alex = Alexandra(argv[1], argv[2])
 world_monitor = alex.pubsub.make_topic_monitor('world')
 alex.pubsub.consume_topic('movement.*',
                  lambda m: add_collisions(m, world_monitor.latest(), alex))

@@ -7,12 +7,16 @@ class Docstore:
         self._cache = {}
 
     def wait_until_up(self, timeout=5):
+        return self.wait_and_get('/index.html', timeout) is not None
+
+    def wait_and_get(self, path, timeout=5):
         give_up = now() + timeout
         while now() < give_up:
-            if self._is_up():
-                return True
+            doc = self.get(path)
+            if doc is not None:
+                return doc
             sleep(0.1)
-        return False
+        return None
 
     def put(self, data, path, content_type):
         opener = build_opener(HTTPHandler)
@@ -27,12 +31,6 @@ class Docstore:
             if path not in self._cache:
                 return None
         return self._cache[path]['data']
-
-    def _is_up(self):
-        try:
-            return 200 == urlopen(self._url + '/index.html').getcode()
-        except URLError:
-            return False
 
     def _fill_cache(self, path):
         url = self._url + path

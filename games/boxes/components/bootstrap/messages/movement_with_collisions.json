@@ -1,7 +1,0 @@
-{
-"name": "movement_with_collisions",
-"extensions": "entity type",
-"content": "JSON-encoded dictionary with these key-value pairs - 'entity': string, 'index': integer, 'from': (integer, integer), 'to': (integer: integer), and 'collisions': list of dictionaries each containing 'entity': string and 'position': (integer, integer)",
-"meaning": "Movement requested by the entity of type 'entity' with index 'index', from the 'from' location to the 'to' location (both given as (x,y) co-ordinates), together with a list of those entities with which the moving entity would collide if the movement occurred - the collision list gives the entity type and position as an (x,y) pair",
-"example": "movement_with_collisions.player -> {\"collisions\": [{\"position\": [0, 160], \"entity\": \"wall_horizontal\"}], \"index\": 0, \"entity\": \"player\", \"from\": [10, 105], \"to\": [10, 110]}"
-}
