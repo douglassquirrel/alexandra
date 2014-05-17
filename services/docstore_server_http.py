@@ -1,9 +1,9 @@
 #! /usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from json import load
+from json import load, dumps
 from os.path import join as pathjoin
-from re import sub
+from re import match, sub
 from sys import argv
 
 INDEX_TEMPLATE = '''
@@ -34,17 +34,32 @@ class Resources:
     def get(self, path):
         if path in self.resources:
             return self.resources[path]
-        if path.endswith('index.html'):
-            return {'content_type': 'text/html',
-                    'content': self.html_index(sub('index\.html$', '', path))}
-        return None
+        m = match('(.*)/index.(\w*)$', path)
+        if m is not None:
+            return self._index_response(m.group(1), m.group(2))
+        else:
+            return None
 
-    def all_paths(self):
+    def _index_response(self, root, protocol):
+        paths = self._paths_in(root)
+        if protocol == 'html':
+            content_type = 'text/html'
+            content = self._html_index(root, paths)
+        elif protocol == 'json':
+            content_type = 'application/json'
+            content = dumps(paths)
+        else:
+            return None
+        return {'content_type': content_type, 'content': content}
+
+    def _all_paths(self):
         return self.resources.keys()
 
-    def html_index(self, root):
-        paths = sorted(self.all_paths())
-        links = [LINK_TEMPLATE % (p,p) for p in paths if p.startswith(root)]
+    def _paths_in(self, root):
+        return sorted(filter(lambda p: p.startswith(root), self._all_paths()))
+
+    def _html_index(self, root, paths):
+        links = [LINK_TEMPLATE % (p,p) for p in paths]
         return INDEX_TEMPLATE % (root, root, '\n'.join(links))
 
 class HTTPServerWithResources(HTTPServer):
