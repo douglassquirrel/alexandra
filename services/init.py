@@ -15,22 +15,19 @@ from tempfile import mkdtemp
 install_dir = mkdtemp(prefix='emcee.')
 games_dir = abspath(pathjoin('..', 'games'))
 libraries_dir = abspath(pathjoin('..', 'libraries'))
-infra_dir = abspath('infra')
 print 'Installing services in %s' % (install_dir,)
 print 'Games in %s' % (games_dir,)
 print 'Libraries in %s' % (libraries_dir,)
-print 'Infrastructure files in %s' % (infra_dir,)
 
-INFRA_FILES = ['emcee.py', 'docstore_server_http.py', 'pubsub_ws.py',
-               'pubsub_ws_doc.html',
-               pathjoin(libraries_dir, 'docstore.py'),
-               pathjoin(libraries_dir, 'pubsub.py'),
-               pathjoin(libraries_dir, 'shepherd.py'),]
+install_files = ['emcee.py', 'docstore_server_http.py', 'pubsub_ws.py',
+                 'pubsub_ws_doc.html', 'run_components.py',
+                 pathjoin(libraries_dir, 'docstore.py'),
+                 pathjoin(libraries_dir, 'pubsub.py'),
+                 pathjoin(libraries_dir, 'shepherd.py'),]
 
-map(lambda f: copy(f, install_dir), INFRA_FILES)
+map(lambda f: copy(f, install_dir), install_files)
 
-config_file_path = pathjoin(infra_dir, 'infra.json')
-with open(config_file_path, 'r') as config_file:
+with open('services.json', 'r') as config_file:
     config = load(config_file)
 docstore_host = config['docstore_host']
 docstore_port = str(config['docstore_port'])
@@ -42,8 +39,7 @@ pubsub_url = config['pubsub_url']
 def add_service(herd, executable, options):
     herd.add(pathjoin(install_dir, executable), options, install_dir)
 
-options = {'emcee.py':                [games_dir, libraries_dir, infra_dir,
-                                       docstore_url],
+options = {'emcee.py':                [games_dir, libraries_dir, docstore_url],
            'docstore_server_http.py': [docstore_host, docstore_port],
            'pubsub_ws.py':            [pubsub_host, pubsub_port, docstore_url]}
 
