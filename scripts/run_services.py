@@ -6,6 +6,7 @@ path.insert(0, abspath(pathjoin('..', 'libraries')))
 
 from docstore import connect as docstore_connect
 from json import load
+from os import listdir
 from shepherd import Herd
 from shutil import copy
 from subprocess import Popen
@@ -13,21 +14,19 @@ from sys import exit
 from tempfile import mkdtemp
 
 install_dir = mkdtemp(prefix='emcee.')
+print 'Installing services in %s' % (install_dir,)
+
+services_dir = abspath(pathjoin('..', 'services'))
 games_dir = abspath(pathjoin('..', 'games'))
 libraries_dir = abspath(pathjoin('..', 'libraries'))
-print 'Installing services in %s' % (install_dir,)
-print 'Games in %s' % (games_dir,)
-print 'Libraries in %s' % (libraries_dir,)
 
-install_files = ['emcee.py', 'docstore_server_http.py', 'pubsub_ws.py',
-                 'pubsub_ws_doc.html', 'run_components.py',
-                 pathjoin(libraries_dir, 'docstore.py'),
-                 pathjoin(libraries_dir, 'pubsub.py'),
-                 pathjoin(libraries_dir, 'shepherd.py'),]
+def full_path_listdir(d):
+    return [pathjoin(d, name) for name in listdir(d)]
 
-map(lambda f: copy(f, install_dir), install_files)
+map(lambda f: copy(f, install_dir), full_path_listdir(services_dir))
+map(lambda f: copy(f, install_dir), full_path_listdir(libraries_dir))
 
-with open('services.json', 'r') as config_file:
+with open(pathjoin(services_dir, 'services.json'), 'r') as config_file:
     config = load(config_file)
 docstore_host = config['docstore_host']
 docstore_port = str(config['docstore_port'])
