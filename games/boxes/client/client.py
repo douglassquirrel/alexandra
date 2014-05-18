@@ -72,9 +72,6 @@ if request_game(game_name, game_id, pubsub_url) is False:
     print "Could not start game"
     exit(1)
 
-if len(argv) > 3:
-    alex = Alexandra(docstore_url, game_id, argv[3])
-else:
-    alex = Alexandra(docstore_url, game_id)
+alex = Alexandra(docstore_url, game_id)
 window = init_window(alex.config['field_width'], alex.config['field_height'])
 alex.pubsub.consume_topic('world', lambda w: update(window, w, alex))
