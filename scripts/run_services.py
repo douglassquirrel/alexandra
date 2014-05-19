@@ -9,9 +9,10 @@ from installer import install
 from json import load
 from sys import exit
 
-def install_service(name, options, services_dir, libraries_dir):
+def install_service(name, options, services_dir, libraries_dir, docstore_url):
     service_dir = abspath(pathjoin(services_dir, name))
-    return install(name, [service_dir, libraries_dir], options)[0]
+    sources = [service_dir, libraries_dir]
+    return install(name, sources, options, 'services', docstore_url)[0]
 
 services_dir = abspath(pathjoin('..', 'services'))
 games_dir = abspath(pathjoin('..', 'games'))
@@ -30,7 +31,8 @@ services = [('docstore_server_http', [docstore_host, docstore_port]),
            ('emcee', [games_dir, libraries_dir, docstore_url]),
            ('pubsub_ws', [pubsub_host, pubsub_port, docstore_url])]
 
-procs = map(lambda (n, o): install_service(n, o, services_dir, libraries_dir),
+procs = map(lambda (n, o): install_service(n, o, services_dir, libraries_dir,
+                                           docstore_url),
             services)
 
 docstore = docstore_connect(docstore_url)
@@ -41,4 +43,4 @@ docstore.put(pubsub_url, '/services/pubsub', 'text/plain')
 
 print 'Now running'
 raw_input('Press Enter to stop\n')
-map(lambda p: p.kill(), procs)
+map(lambda (n, p): p.kill(), procs)

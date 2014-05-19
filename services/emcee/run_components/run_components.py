@@ -9,9 +9,10 @@ from os.path import join as pathjoin
 from pubsub import connect as pubsub_connect
 from sys import argv
 
-def install_component(name, copies, libraries_dir, options):
+def install_component(name, game_id, copies,
+                      libraries_dir, options, docstore_url):
     sources = [pathjoin('components', name), libraries_dir]
-    return install(name, sources, options, copies)
+    return install(name, sources, options, game_id, docstore_url, copies)
 
 def heart_monitor(game_id, pubsub):
     heartbeat_queue = pubsub.subscribe('heartbeat')
@@ -29,7 +30,8 @@ docstore.put(dumps(game_data), '/game.json', 'application/json')
 options = [docstore_url, game_id]
 procs = []
 for (name, copies) in game_data['components'].items():
-    procs += install_component(name, copies, libraries_dir, options)
+    procs += install_component(name, game_id, copies, libraries_dir, options,
+                               docstore_url)
 
 pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
 pubsub = pubsub_connect(pubsub_url, game_id)
@@ -38,4 +40,4 @@ print 'Now running game %s' % (game_id,)
 heart_monitor(game_id, pubsub)
 
 print 'Game %s ending' % (game_id,)
-map(lambda p: p.kill(), procs)
+map(lambda (n,p): p.kill(), procs)

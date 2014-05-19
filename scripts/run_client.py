@@ -17,4 +17,5 @@ if len(argv) > 3:
     print 'Using pubsub URL %s' % pubsub_url
     options.append(pubsub_url)
 
-install(game_name + '-client', [game_client_dir, libraries_dir], options)
+sources = [game_client_dir, libraries_dir]
+install(game_name + '-client', sources, options)
