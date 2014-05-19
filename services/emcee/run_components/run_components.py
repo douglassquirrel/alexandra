@@ -12,7 +12,7 @@ from sys import argv
 def install_component(name, game_id, copies,
                       libraries_dir, options, docstore_url):
     sources = [pathjoin('components', name), libraries_dir]
-    return install(name, sources, options, game_id, docstore_url, copies)
+    install(name, sources, options, game_id, docstore_url, copies)
 
 def heart_monitor(game_id, pubsub):
     heartbeat_queue = pubsub.subscribe('heartbeat')
@@ -27,17 +27,16 @@ with open('game.json', 'r') as game_file:
 docstore = docstore_connect(docstore_url + "/" + game_id)
 docstore.put(dumps(game_data), '/game.json', 'application/json')
 
-options = [docstore_url, game_id]
-procs = []
 for (name, copies) in game_data['components'].items():
-    procs += install_component(name, game_id, copies, libraries_dir, options,
-                               docstore_url)
+    install_component(name, game_id, copies, libraries_dir,
+                      [docstore_url, game_id], docstore_url)
 
 pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-pubsub = pubsub_connect(pubsub_url, game_id)
-pubsub.publish('game_state', 'running')
+game_pubsub = pubsub_connect(pubsub_url, game_id)
+game_pubsub.publish('game_state', 'running')
 print 'Now running game %s' % (game_id,)
-heart_monitor(game_id, pubsub)
+heart_monitor(game_id, game_pubsub)
 
 print 'Game %s ending' % (game_id,)
-map(lambda (n,p): p.kill(), procs)
+executioner_pubsub = pubsub_connect(pubsub_url, 'executioner')
+executioner_pubsub.publish('kill', '"/%s"' % (game_id,))

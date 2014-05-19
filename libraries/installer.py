@@ -21,7 +21,6 @@ def install(name, sources, options, group=None, docstore_url=None, copies=1):
             pids = map(lambda (n, p): (n, p.pid), procs)
             docstore.put(dumps(pids), '/%s/processes/%s' % (group, name),
                          'application/json')
-    return procs
 
 def _run(executable, options, cwd):
     return (node(), Popen([executable] + options, cwd=cwd))
