@@ -6,8 +6,8 @@ path.insert(0, abspath(pathjoin('..', 'libraries')))
 
 from docstore import connect as docstore_connect
 from installer import install
-from json import load
-from os import listdir
+from json import load, dumps
+from os import access, listdir, X_OK
 from os.path import abspath, basename, isdir, isfile, join as pathjoin
 from pubsub import connect as pubsub_connect
 from sys import exit
@@ -26,6 +26,9 @@ def publish_file(root, path, docstore):
         data = f.read()
     docstore.put(data, url_path)
 
+def is_executable_file(f):
+    return isfile(f) and access(f, X_OK)
+
 def is_valid_file(filename):
     return not basename(filename).startswith('.')
 
@@ -35,6 +38,10 @@ def publish_dir(root, path, docstore):
     dirs = filter(isdir, contents)
     map(lambda f: publish_file(root, f, docstore), files)
     map(lambda d: publish_dir(root, d, docstore), dirs)
+    executables = filter(is_executable_file, files)
+    if len(executables) > 0:
+        install_data = dumps({'executable': basename(executables[0])})
+        docstore.put(install_data, path[len(root):] + '/install.json')
 
 services_dir = abspath(pathjoin('..', 'services'))
 games_dir = abspath(pathjoin('..', 'games'))
