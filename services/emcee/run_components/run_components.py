@@ -25,7 +25,7 @@ game_id, docstore_url, libraries_dir = argv[1], argv[2], argv[3]
 with open('game.json', 'r') as game_file:
     game_data = load(game_file)
 docstore = docstore_connect(docstore_url + "/" + game_id)
-docstore.put(dumps(game_data), '/game.json', 'application/json')
+docstore.put(dumps(game_data), '/game.json')
 
 for (name, copies) in game_data['components'].items():
     install_component(name, game_id, copies, libraries_dir,

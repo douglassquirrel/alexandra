@@ -15,8 +15,7 @@ DELTAS = [(-5, 0), (5, 0), (0, -5), (0, 5)]
 def init(alex):
     alex.docstore.put(dumps({'width': WIDTH, 'height': HEIGHT,
                              'colour': COLOUR}),
-                      '/opponent_random/opponent_random.json',
-                      'application/json')
+                      '/opponent_random/opponent_random.json')
 
 def move(world, alex):
     if NAME not in world['entities']:

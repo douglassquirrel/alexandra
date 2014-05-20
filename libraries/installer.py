@@ -19,8 +19,7 @@ def install(name, sources, options, group=None, docstore_url=None, copies=1):
         docstore = connect(docstore_url)
         if docstore.wait_until_up() is True:
             pids = map(lambda (n, p): (n, p.pid), procs)
-            docstore.put(dumps(pids), '/%s/processes/%s' % (group, name),
-                         'application/json')
+            docstore.put(dumps(pids), '/%s/processes/%s.json' % (group, name))
 
 def _run(executable, options, cwd):
     return (node(), Popen([executable] + options, cwd=cwd))

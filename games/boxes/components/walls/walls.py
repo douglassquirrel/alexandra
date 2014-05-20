@@ -15,12 +15,10 @@ CELL_WIDTH = 80
 def init(alex):
     alex.docstore.put(dumps({'width': H_WIDTH, 'height': H_HEIGHT,
                              'colour': COLOUR}),
-                      '/wall_horizontal/wall_horizontal.json',
-                      'application/json')
+                      '/wall_horizontal/wall_horizontal.json')
     alex.docstore.put(dumps({'width': V_WIDTH, 'height': V_HEIGHT,
                              'colour': COLOUR}),
-                      '/wall_vertical/wall_vertical.json',
-                      'application/json')
+                      '/wall_vertical/wall_vertical.json')
 
 def draw_wall(index, wall, tick, alex):
     position = (wall[0] * CELL_WIDTH, wall[1] * CELL_WIDTH)

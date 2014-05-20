@@ -34,7 +34,7 @@ class Resources:
     def get(self, path):
         if path in self.resources:
             return self.resources[path]
-        m = match('(.*)/index.(\w*)$', path)
+        m = match(r"(.*)/index.(\w*)$", path)
         if m is not None:
             return self._index_response(m.group(1), m.group(2))
         else:
