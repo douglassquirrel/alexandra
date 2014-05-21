@@ -12,14 +12,22 @@ from tempfile import mkdtemp
 def install(name, sources, options, group=None, docstore_url=None, copies=1):
     install_dir = mkdtemp(prefix=name + '.')
     map(lambda d: _copy_dir_contents(d, install_dir), sources)
-    executable = filter(_is_executable_file, _abspath_listdir(install_dir))[0]
-    procs = map(lambda i: _run(executable, options + [str(i)], install_dir),
-                range(copies))
-    if docstore_url is not None:
-        docstore = connect(docstore_url)
-        if docstore.wait_until_up() is True:
-            pids = map(lambda (n, p): (n, p.pid), procs)
-            docstore.put(dumps(pids), '/%s/processes/%s.json' % (group, name))
+    procs = _run_installed(install_dir, options, copies)
+    if group is not None:
+        _publish_group_pids(name, group, procs, docstore_url)
+
+def _run_installed(install_dir, options, copies):
+    executable = _find_executable(install_dir)
+    return map(lambda i: _run(executable, options + [str(i)], install_dir),
+               range(copies))
+
+def _publish_group_pids(name, group, procs, docstore_url):
+    docstore = connect(docstore_url)
+    if docstore.wait_until_up() is False:
+        print 'No docstore at %s for pids for %s' % (docstore_url, name)
+        return
+    pids = map(lambda (n, p): (n, p.pid), procs)
+    docstore.put(dumps(pids), '/%s/processes/%s.json' % (group, name))
 
 def _run(executable, options, cwd):
     return (node(), Popen([executable] + options, cwd=cwd))
@@ -38,3 +46,6 @@ def _copy_dir_contents(from_dir, to_dir):
 
 def _is_executable_file(f):
     return isfile(f) and access(f, X_OK)
+
+def _find_executable(d):
+    return filter(_is_executable_file, _abspath_listdir(d))[0]
