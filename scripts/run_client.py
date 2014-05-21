@@ -4,7 +4,7 @@ from os.path import abspath, join as pathjoin
 from sys import path
 path.insert(0, abspath(pathjoin('..', 'libraries')))
 
-from installer import install
+from installer import install_dir
 from sys import argv
 
 docstore_url, game_name = argv[1], argv[2]
@@ -18,4 +18,4 @@ if len(argv) > 3:
     options.append(pubsub_url)
 
 sources = [game_client_dir, libraries_dir]
-install(game_name + '-client', sources, options)
+install_dir(game_name + '-client', sources, options)

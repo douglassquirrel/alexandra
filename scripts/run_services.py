@@ -5,7 +5,7 @@ from sys import path
 path.insert(0, abspath(pathjoin('..', 'libraries')))
 
 from docstore import connect as docstore_connect
-from installer import install
+from installer import install_dir
 from json import load, dumps
 from os import access, listdir, X_OK
 from os.path import abspath, basename, isdir, isfile, join as pathjoin
@@ -15,7 +15,7 @@ from sys import exit
 def install_service(name, options, services_dir, libraries_dir, docstore_url):
     service_dir = abspath(pathjoin(services_dir, name))
     sources = [service_dir, libraries_dir]
-    install(name, sources, options, 'services', docstore_url)
+    install_dir(name, sources, options, docstore_url, 'services')
 
 def abspath_listdir(d):
     return [abspath(pathjoin(d, name)) for name in listdir(d)]
