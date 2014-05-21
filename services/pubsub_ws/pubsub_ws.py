@@ -2,7 +2,6 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from docstore import connect as docstore_connect
-from os.path import join as pathjoin
 from pubsub import connect as pubsub_connect
 from re import match
 from SocketServer import ForkingMixIn

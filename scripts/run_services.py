@@ -8,7 +8,7 @@ from docstore import connect as docstore_connect
 from installer import install_dir
 from json import load, dumps
 from os import access, listdir, X_OK
-from os.path import abspath, basename, isdir, isfile, join as pathjoin
+from os.path import basename, isdir, isfile
 from pubsub import connect as pubsub_connect
 from sys import exit
 

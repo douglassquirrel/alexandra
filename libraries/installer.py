@@ -2,8 +2,9 @@
 
 from docstore import connect
 from json import load, loads, dumps
-from os import access, chmod, listdir, stat, X_OK
-from os.path import abspath, basename, dirname, isfile, isdir, join as pathjoin
+from os import access, chmod, listdir, makedirs, stat, X_OK
+from os.path import abspath, basename, dirname, exists, \
+                    isfile, isdir, join as pathjoin
 from platform import node
 from shutil import copy, copytree
 from stat import S_IEXEC
@@ -41,6 +42,8 @@ def _docstore_to_file_path(source, dest, path):
     return pathjoin(dest, *(path[len(source):].split('/')))
 
 def _docstore_to_file(from_path, to_path, docstore):
+    if not exists(dirname(to_path)):
+        makedirs(dirname(to_path))
     with open(to_path, 'w') as f:
         f.write(docstore.get(from_path))
 

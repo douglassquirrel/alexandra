@@ -5,7 +5,6 @@ HEARTBEAT_TIMEOUT = 5
 from docstore import connect as docstore_connect
 from installer import install_docstore
 from json import load, dumps
-from os.path import join as pathjoin
 from pubsub import connect as pubsub_connect
 from sys import argv
 

@@ -1,8 +1,7 @@
 #! /usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from json import load, dumps
-from os.path import join as pathjoin
+from json import dumps
 from re import match, sub
 from sys import argv
 
