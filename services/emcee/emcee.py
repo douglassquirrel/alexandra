@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 from docstore import connect as docstore_connect
-from installer import install
+from installer import install_dir
 from json import loads
 from os.path import join as pathjoin
 from pubsub import connect as pubsub_connect
@@ -13,9 +13,9 @@ def start_game(message, games_dir, libraries_dir):
     name, id = game_info['name'], game_info['id']
     game_dir = pathjoin(games_dir, name)
 
-    install('run_components.%s' % (id,),
-            [game_dir, 'run_components', libraries_dir],
-            [id, docstore_url, libraries_dir])
+    install_dir('run_components.%s' % (id,),
+                [game_dir, 'run_components', libraries_dir],
+                [id, name, docstore_url])
 
 games_dir, libraries_dir, docstore_url = argv[1:4]
 
