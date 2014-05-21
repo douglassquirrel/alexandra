@@ -57,7 +57,7 @@ pubsub_port = str(config['pubsub_port'])
 pubsub_url = str(config['pubsub_url'])
 
 services = [('docstore_server_http', [docstore_host, docstore_port]),
-            ('emcee', [games_dir, libraries_dir, docstore_url]),
+            ('emcee', [docstore_url]),
             ('pubsub_ws', [pubsub_host, pubsub_port, docstore_url]),
             ('executioner', [docstore_url])]
 
