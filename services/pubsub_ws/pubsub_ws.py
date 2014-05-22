@@ -2,10 +2,11 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from docstore import connect as docstore_connect
+from json import loads
 from pubsub import connect as pubsub_connect
 from re import match
 from SocketServer import ForkingMixIn
-from sys import argv
+from sys import argv, exit
 
 def wrong_verb(expected, got):
     return {'code': 405,
@@ -111,7 +112,15 @@ class PubSubHandler(BaseHTTPRequestHandler):
 class ForkingHTTPServer(ForkingMixIn, HTTPServer):
     pass
 
-host, port = argv[1], int(argv[2])
+docstore_url = argv[1]
+docstore = docstore_connect(docstore_url)
+config_json = docstore.wait_and_get('/alexandra/services/services.json')
+if config_json is None:
+    print 'No services.json, exiting'
+    exit(1)
+config = loads(config_json)
+host, port = config['pubsub_host'], config['pubsub_port']
+
 server = ForkingHTTPServer((host, port), PubSubHandler)
-server.docstore_url = argv[3]
+server.docstore_url = docstore_url
 server.serve_forever()

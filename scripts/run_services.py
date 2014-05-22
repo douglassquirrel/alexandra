@@ -44,7 +44,6 @@ def publish_dir(root, path, docstore):
         docstore.put(install_data, path[len(root):] + '/install.json')
 
 services_dir = abspath(pathjoin('..', 'services'))
-games_dir = abspath(pathjoin('..', 'games'))
 libraries_dir = abspath(pathjoin('..', 'libraries'))
 
 with open(pathjoin(services_dir, 'services.json'), 'r') as config_file:
@@ -58,7 +57,7 @@ pubsub_url = str(config['pubsub_url'])
 
 services = [('docstore_server_http', [docstore_host, docstore_port]),
             ('emcee', [docstore_url]),
-            ('pubsub_ws', [pubsub_host, pubsub_port, docstore_url]),
+            ('pubsub_ws', [docstore_url]),
             ('executioner', [docstore_url])]
 
 map(lambda (n, o): install_service(n, o, services_dir, libraries_dir,
