@@ -2,7 +2,7 @@
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import dumps
-from re import match, sub
+from re import match
 from sys import argv
 
 INDEX_TEMPLATE = '''

@@ -21,7 +21,7 @@ class Docstore:
 
     def put(self, data, path, content_type=None):
         if content_type is None:
-            content_type = mime_from_path(path)
+            content_type = _mime_from_path(path)
         opener = build_opener(HTTPHandler)
         request = Request(self._url + path, data)
         request.add_header('Content-Type', content_type)
@@ -31,8 +31,8 @@ class Docstore:
     def get(self, path):
         if path not in self._cache:
             self._fill_cache(path)
-            if path not in self._cache:
-                return None
+        if path not in self._cache:
+            return None
         return self._cache[path]['data']
 
     def _fill_cache(self, path):
@@ -54,7 +54,7 @@ MIME_TYPES = {'html': 'text/html',
               'txt':  'text/plain'}
 DEFAULT_MIME_TYPE = 'text/plain'
 
-def mime_from_path(path):
+def _mime_from_path(path):
     m = search(r"\.(\w+)$", path)
     if m is None:
         return DEFAULT_MIME_TYPE

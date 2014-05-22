@@ -1,7 +1,6 @@
 from docstore import connect as docstore_connect
 from json import dumps, loads
 from pubsub import connect as pubsub_connect
-from sys import argv
 
 DEFAULT_GAME_TIMEOUT = 5
 
