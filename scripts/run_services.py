@@ -55,20 +55,19 @@ pubsub_host = str(config['pubsub_host'])
 pubsub_port = str(config['pubsub_port'])
 pubsub_url = str(config['pubsub_url'])
 
-services = [('docstore_server_http', [docstore_host, docstore_port]),
-            ('emcee', [docstore_url]),
-            ('pubsub_ws', [docstore_url]),
-            ('executioner', [docstore_url])]
-
-map(lambda (n, o): install_service(n, o, services_dir, libraries_dir,
-                                   docstore_url),
-    services)
-
+install_service('docstore_server_http', [docstore_host, docstore_port],
+                services_dir, libraries_dir, docstore_url)
 docstore = docstore_connect(docstore_url)
 if docstore.wait_until_up() is False:
     print 'Could not start docstore'
     exit(1)
 docstore.put(pubsub_url, '/services/pubsub')
+
+services = ['emcee', 'pubsub_ws', 'executioner']
+map(lambda n: install_service(n, [docstore_url],
+                              services_dir, libraries_dir,
+                              docstore_url),
+    services)
 
 docstore_alex = docstore_connect(docstore_url + '/alexandra')
 root = abspath('..')
