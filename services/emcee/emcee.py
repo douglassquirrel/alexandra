@@ -1,8 +1,7 @@
 #! /usr/bin/python
 
 from docstore import connect as docstore_connect
-from installer import install_docstore
-from json import loads
+from json import loads, dumps
 from pubsub import connect as pubsub_connect
 from sys import argv
 
@@ -11,8 +10,13 @@ def start_game(game_info, docstore_url):
     sources = ['/games/%s' % (name,),
                '/services/emcee/run_components',
                '/libraries']
-    install_docstore('run_components.%s' % (id,), sources,
-                     [id, name, docstore_url], docstore_url)
+    pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+    pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps)
+
+    install_message = {'name': 'run_components.%s' % (id,),
+                       'sources': sources,
+                       'options': [id, name, docstore_url]}
+    pubsub.publish('install', install_message)
 
 docstore_url = argv[1]
 docstore = docstore_connect(docstore_url)
