@@ -22,7 +22,7 @@ docstore_host = str(config['docstore_host'])
 docstore_port = str(config['docstore_port'])
 docstore_url = 'http://%s:%s' % (docstore_host, docstore_port)
 pubsub_url = str(config['pubsub_url'])
-pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps, unmarshal=loads)
+pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps)
 
 docstore_dir = abspath(pathjoin(services_dir, 'docstore_server_http'))
 install_dir('docstore_server_http', [docstore_dir, libraries_dir],

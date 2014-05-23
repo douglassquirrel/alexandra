@@ -3,15 +3,9 @@
 HEARTBEAT_TIMEOUT = 5
 
 from docstore import connect as docstore_connect
-from installer import install_docstore
 from json import load, dumps
 from pubsub import connect as pubsub_connect
 from sys import argv
-
-def install_component(game_name, comp_name, game_id,
-                      copies, options, docstore_url):
-    sources = ['/games/%s/components/%s' % (game_name, comp_name), '/libraries']
-    install_docstore(comp_name, sources, options, docstore_url, game_id, copies)
 
 def heart_monitor(game_id, pubsub):
     heartbeat_queue = pubsub.subscribe('heartbeat')
@@ -26,16 +20,21 @@ with open('game.json', 'r') as game_file:
 docstore = docstore_connect(docstore_url + "/" + game_id)
 docstore.put(dumps(game_data), '/game.json')
 
-for (comp_name, copies) in game_data['components'].items():
-    install_component(game_name, comp_name, game_id, copies,
-                      [docstore_url, game_id], docstore_url)
-
 pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+process_pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps)
+for (comp_name, copies) in game_data['components'].items():
+    sources = ['/games/%s/components/%s' % (game_name, comp_name), '/libraries']
+    install_message = {'name': comp_name,
+                       'sources': sources,
+                       'options': [docstore_url, game_id],
+                       'group': game_id,
+                       'copies': copies}
+    process_pubsub.publish('install', install_message)
+
 game_pubsub = pubsub_connect(pubsub_url, game_id)
 game_pubsub.publish('game_state', 'running')
 print 'Now running game %s' % (game_id,)
 heart_monitor(game_id, game_pubsub)
 
 print 'Game %s ending' % (game_id,)
-process_pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps)
 process_pubsub.publish('kill', '/%s' % (game_id,))
