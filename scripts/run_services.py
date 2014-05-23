@@ -11,6 +11,7 @@ from json import load, loads, dumps
 from publish_dir import publish_dir
 from pubsub import connect as pubsub_connect
 from sys import exit
+from time import sleep     
 
 services_dir = abspath(pathjoin('..', 'services'))
 libraries_dir = abspath(pathjoin('..', 'libraries'))
@@ -21,6 +22,7 @@ docstore_host = str(config['docstore_host'])
 docstore_port = str(config['docstore_port'])
 docstore_url = 'http://%s:%s' % (docstore_host, docstore_port)
 pubsub_url = str(config['pubsub_url'])
+pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps, unmarshal=loads)
 
 docstore_dir = abspath(pathjoin(services_dir, 'docstore_server_http'))
 install_dir('docstore_server_http', [docstore_dir, libraries_dir],
@@ -35,12 +37,19 @@ docstore_alex = docstore_connect(docstore_url + '/alexandra')
 root = abspath('..')
 publish_dir(root, root, docstore_alex)
 
-map(lambda n: install_docstore(n, ['/services/%s' % (n,), '/libraries'],
-                               [docstore_url], docstore_url, 'services'),
-    ['emcee', 'pubsub_ws', 'executioner'])
+install_docstore('install_service',
+                 ['/services/install_service', '/libraries'],
+                 [docstore_url], docstore_url, 'services')
+sleep(1)
+
+for name in ['emcee', 'pubsub_ws', 'executioner']:
+    install_message = {'name': name,
+                       'sources': ['/services/%s' % (name,), '/libraries'],
+                       'options': [docstore_url],
+                       'group': 'services'}
+    pubsub.publish('install', install_message)
 
 print 'Now running'
 raw_input('Press Enter to stop\n')
 
-pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps, unmarshal=loads)
 pubsub.publish('kill', '/services')
