@@ -34,5 +34,5 @@ pubsub_url = docstore.wait_and_get('/services/pubsub')
 if pubsub_url is None:
     print 'No pubsub data on docstore, exiting'
     exit(1)
-pubsub = pubsub_connect(pubsub_url, 'process')
-pubsub.consume_topic('kill', lambda m: kill_group(loads(m), docstore))
+pubsub = pubsub_connect(pubsub_url, 'process', unmarshal=loads)
+pubsub.consume_topic('kill', lambda m: kill_group(m, docstore))

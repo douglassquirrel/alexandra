@@ -5,12 +5,12 @@ from pubsub import connect as pubsub_connect
 DEFAULT_GAME_TIMEOUT = 5
 
 def request_game(game_name, game_id, pubsub_url, timeout=DEFAULT_GAME_TIMEOUT):
-    emcee_pubsub = pubsub_connect(pubsub_url, 'emcee')
+    emcee_pubsub = pubsub_connect(pubsub_url, 'emcee', marshal=dumps)
     game_pubsub = pubsub_connect(pubsub_url, game_id)
     game_state_queue = game_pubsub.subscribe('game_state')
 
     game_info = {'name': game_name, 'id': game_id}
-    emcee_pubsub.publish('game.wanted', dumps(game_info))
+    emcee_pubsub.publish('game.wanted', game_info)
 
     return game_pubsub.get_message_block(game_state_queue, timeout) is not None
 

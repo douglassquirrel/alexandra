@@ -37,5 +37,5 @@ print 'Now running game %s' % (game_id,)
 heart_monitor(game_id, game_pubsub)
 
 print 'Game %s ending' % (game_id,)
-process_pubsub = pubsub_connect(pubsub_url, 'process')
-process_pubsub.publish('kill', '"/%s"' % (game_id,))
+process_pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps)
+process_pubsub.publish('kill', '/%s' % (game_id,))

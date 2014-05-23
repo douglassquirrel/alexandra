@@ -7,7 +7,7 @@ path.insert(0, abspath(pathjoin('..', 'infralib')))
 
 from docstore import connect as docstore_connect
 from installer import install_dir, install_docstore
-from json import load
+from json import load, loads, dumps
 from publish_dir import publish_dir
 from pubsub import connect as pubsub_connect
 from sys import exit
@@ -42,5 +42,5 @@ map(lambda n: install_docstore(n, ['/services/%s' % (n,), '/libraries'],
 print 'Now running'
 raw_input('Press Enter to stop\n')
 
-pubsub = pubsub_connect(pubsub_url, 'process')
-pubsub.publish('kill', '"/services"')
+pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps, unmarshal=loads)
+pubsub.publish('kill', '/services')
