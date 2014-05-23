@@ -41,5 +41,5 @@ map(lambda n: install_docstore(n, ['/services/%s' % (n,), '/libraries'],
 print 'Now running'
 raw_input('Press Enter to stop\n')
 
-pubsub = pubsub_connect(pubsub_url, 'executioner')
+pubsub = pubsub_connect(pubsub_url, 'process')
 pubsub.publish('kill', '"/services"')
