@@ -38,7 +38,7 @@ root = abspath('..')
 publish_dir(root, root, docstore_alex)
 
 install_docstore('install_service',
-                 ['/services/install_service', '/libraries'],
+                 ['/services/install_service', '/libraries', '/infralib'],
                  [docstore_url], docstore_url, 'services')
 sleep(1)
 

@@ -3,6 +3,7 @@
 from os.path import abspath, join as pathjoin
 from sys import path
 path.insert(0, abspath(pathjoin('..', 'libraries')))
+path.insert(0, abspath(pathjoin('..', 'infralib')))
 
 from installer import install_docstore
 from sys import argv
