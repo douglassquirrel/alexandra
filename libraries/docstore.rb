@@ -8,6 +8,21 @@ class Docstore
     @cache = {}
   end
 
+  def wait_until_up(timeout=5)
+    return nil # not implemented
+  end
+
+  def wait_and_get(path, timeout=5)
+    return nil # not implemented
+  end
+
+  def put(data, path, content_type=nil)
+    if content_type == nil
+      content_type = mime_from_path(path)
+    end
+    @http.send_request('PUT', path, data, {'Content-Type' => content_type})
+  end
+
   def get(path)
     if not @cache.has_key?(path)
       fill_cache(path)
@@ -21,4 +36,12 @@ class Docstore
       @cache[path] = response.body
     end
   end
+end
+
+def connect(url)
+  Docstore(url)
+end
+
+def mime_from_path(path)
+  'text/plain'   
 end
