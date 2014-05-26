@@ -3,7 +3,7 @@ require 'net/http'
 module Docstore
   class DocstoreHTTP
     def initialize(url)
-      m = %r{\w+://(\w+):(\d+)(/.*)?}.match(url)
+      m = %r{http://([\w\d\.]+):(\d+)(/.*)?}.match(url)
       host, port, @prefix_path = m[1], m[2].to_i, m[3]
       if @prefix_path == nil
         @prefix_path = ''

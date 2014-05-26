@@ -3,5 +3,5 @@
 "docstore_port": 8080,
 "pubsub_host": "0.0.0.0",
 "pubsub_port": 9090,
-"pubsub_url": "amqp://192.168.1.38"
+"pubsub_url": "amqp://localhost"
 }

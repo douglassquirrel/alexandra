@@ -4,7 +4,7 @@ module Pubsub
 
   class AMQPConnection
     def initialize(url, exchange_name, marshal, unmarshal)
-      host = %r{amqp://(\w+)}.match(url)[1]
+      host = %r{amqp://([\w\d\.]+)}.match(url)[1]
       conn = Bunny.new(:hostname => host)
       conn.start
       @channel = conn.create_channel
