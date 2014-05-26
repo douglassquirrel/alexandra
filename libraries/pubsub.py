@@ -9,7 +9,7 @@ class AMQPConnection:
     def __init__(self, url, exchange_name, marshal, unmarshal):
         self._exchange_name = exchange_name
         self.marshal, self.unmarshal = marshal, unmarshal
-        host = match(r"amqp://(\w+)", url).group(1)
+        host = match(r"amqp://([\w\d\.]+)", url).group(1)
         connection = BlockingConnection(ConnectionParameters(host))
         self._channel = connection.channel()
         self._channel.exchange_declare(exchange=self._exchange_name,
