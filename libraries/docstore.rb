@@ -3,8 +3,11 @@ require 'net/http'
 module Docstore
   class DocstoreHTTP
     def initialize(url)
-      m = %r{\w+://(\w+):(\d+)}.match(url)
-      host, port = m[1], m[2].to_i
+      m = %r{\w+://(\w+):(\d+)(/.*)?}.match(url)
+      host, port, @prefix_path = m[1], m[2].to_i, m[3]
+      if @prefix_path == nil
+        @prefix_path = ''
+      end
       @http = Net::HTTP.new(host, port)
       @cache = {}
     end
@@ -18,6 +21,7 @@ module Docstore
     end
 
     def put(data, path, content_type=nil)
+      path = @prefix_path + path
       if content_type == nil
         content_type = Docstore::mime_from_path(path)
       end
@@ -25,6 +29,7 @@ module Docstore
     end
 
     def get(path)
+      path = @prefix_path + path
       if not @cache.has_key?(path)
         fill_cache(path)
       end

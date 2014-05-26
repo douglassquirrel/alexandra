@@ -16,4 +16,20 @@ module Alexandra
 
     return game_pubsub.get_message_block(game_state_queue, timeout) != nil
   end
+
+  class Alex
+    attr_reader :game_id, :pubsub, :docstore, :config
+
+    def initialize(docstore_url, game_id, pubsub_url=nil)
+      @game_id = game_id
+      if pubsub_url == nil
+        pubsub_url = Docstore::connect(docstore_url).get('/services/pubsub')
+      end
+      @pubsub = Pubsub::connect(pubsub_url, game_id,
+                                marshal=-> x {x.to_json},
+                                unmarshal=-> x {JSON.parse(x)})
+      @docstore = Docstore::connect(docstore_url + "/" + game_id)
+      @config = JSON.parse(@docstore.get('/game.json'))
+    end
+  end
 end
