@@ -34,7 +34,7 @@ module Pubsub
 
     def consume_topic(topic, &block)
       queue = subscribe(topic)
-      consume_queue(queue, block)
+      consume_queue(queue, &block)
     end
 
     def get_message(queue)
