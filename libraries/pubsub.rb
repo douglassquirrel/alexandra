@@ -3,16 +3,17 @@ require "bunny"
 module Pubsub
 
   class AMQPConnection
-    def initialize(url, exchange_name)
+    def initialize(url, exchange_name, marshal, unmarshal)
       host = %r{amqp://(\w+)}.match(url)[1]
       conn = Bunny.new(:hostname => host)
       conn.start
       @channel = conn.create_channel
       @exchange = @channel.topic(exchange_name)
+      @marshal, @unmarshal = marshal, unmarshal
     end
 
     def publish(topic, message)
-      @exchange.publish(message, :routing_key => topic)
+      @exchange.publish(@marshal.call(message), :routing_key => topic)
     end
 
     def subscribe(topic)
@@ -25,15 +26,24 @@ module Pubsub
       queue.delete
     end
 
-    def consume(queue, &block)
+    def consume_queue(queue, &block)
       queue.subscribe(:block => true) do |di, p, body|
-        block.call(body)
+        block.call(@unmarshal.call(body))
       end
     end
 
+    def consume_topic(topic, &block)
+      queue = subscribe(topic)
+      consume_queue(queue, block)
+    end
+
     def get_message(queue)
-      delivery_info, properties, payload = queue.pop
-      return payload
+      delivery_info, properties, raw_message = queue.pop
+      if nil != raw_message
+        @unmarshal.call(raw_message)
+      else
+        nil
+      end
     end
 
     def get_all_messages(queue)
@@ -59,10 +69,11 @@ module Pubsub
     end
   end
 
-  def Pubsub.connect(url, exchange_name)
+  def Pubsub.connect(url, exchange_name, marshal=-> x {x}, unmarshal=-> x {x})
     connection_classes = {'amqp' => AMQPConnection}
     protocol = %r{(\w+)://}.match(url)[1]
-    return connection_classes[protocol].new(url, exchange_name)
+    conn_class = connection_classes[protocol]
+    return conn_class.new(url, exchange_name, marshal, unmarshal)
   end
 
   class Alarm
