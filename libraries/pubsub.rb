@@ -1,6 +1,8 @@
 require 'bunny'
 require 'net/http'
 
+HTTP_PATIENCE_SEC = 1
+
 module Pubsub
 
   class AMQPConnection
@@ -97,6 +99,21 @@ module Pubsub
       end
     end
 
+    def consume_queue(queue, &block)
+      path = '%s/queues/%s' % [@prefix, queue]
+      loop do
+        response = @http.get(path, {'Patience' => HTTP_PATIENCE_SEC.to_s})
+        if response.code == "200" and response.body.length > 0
+          block.call(@unmarshal.call(response.body))
+        end
+      end
+    end
+
+    def consume_topic(topic, &block)
+      queue = subscribe(topic)
+      consume_queue(queue, &block)
+    end
+
     def unsubscribe(topic)
       path = '%s/queues/%s' % [@prefix, queue]
       @http.send_request('DELETE', path)
@@ -120,7 +137,19 @@ module Pubsub
       else
         nil
       end
+    end
 
+    def get_message_block(queue, timeout)
+      path = '%s/queues/%s' % [@prefix, queue]
+      alarm = Alarm.new(timeout)
+      loop do
+        response = @http.get(path, {'Patience' => HTTP_PATIENCE_SEC.to_s})
+        if response.code == "200" and response.body.length > 0
+          return @unmarshal.call(response.body)
+        elsif alarm.is_ringing()
+          return nil
+        end
+      end
     end
 
     def make_topic_monitor(topic)
