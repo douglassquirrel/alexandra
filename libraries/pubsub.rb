@@ -1,4 +1,5 @@
-require "bunny"
+require 'bunny'
+require 'net/http'
 
 module Pubsub
 
@@ -69,8 +70,24 @@ module Pubsub
     end
   end
 
+  class HTTPConnection
+    def initialize(url, exchange_name, marshal, unmarshal)
+      m = %r{http://([\w\d\.]+):(\d+)}.match(url)
+      host, port = m[1], m[2].to_i
+      @http = Net::HTTP.new(host, port)
+      @prefix = '/exchanges/%s' % exchange_name
+      @marshal, @unmarshal = marshal, unmarshal
+    end
+
+    def publish(topic, message)
+      path = '%s/%s' % [@prefix, topic]
+      @http.send_request('POST', path, @marshal.call(message))
+    end
+
+  end
+
   def Pubsub.connect(url, exchange_name, marshal=-> x {x}, unmarshal=-> x {x})
-    connection_classes = {'amqp' => AMQPConnection}
+    connection_classes = {'amqp' => AMQPConnection, 'http' => HTTPConnection}
     protocol = %r{(\w+)://}.match(url)[1]
     conn_class = connection_classes[protocol]
     return conn_class.new(url, exchange_name, marshal, unmarshal)
