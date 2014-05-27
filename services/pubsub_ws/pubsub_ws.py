@@ -72,7 +72,7 @@ class PubSubHandler(BaseHTTPRequestHandler):
             params = matched[0].groups()
             handler = matched[1]
             docstore_url = self.server.docstore_url
-            return lambda v, h, c, d: handler(v, h, c, docstore_url, *params)
+            return lambda v, h, c: handler(v, h, c, docstore_url, *params)
 
     def do_GET(self):
         self._do_request('GET')
