@@ -68,6 +68,10 @@ module Pubsub
         end
       end
     end
+
+    def make_topic_monitor(topic)
+      return nil # not implemented
+    end
   end
 
   class HTTPConnection
@@ -84,6 +88,44 @@ module Pubsub
       @http.send_request('POST', path, @marshal.call(message))
     end
 
+    def subscribe(topic)
+      response = @http.get('%s/%s' % [@prefix, topic])
+      if response.code == "200"
+        response.body
+      else
+        nil
+      end
+    end
+
+    def unsubscribe(topic)
+      path = '%s/queues/%s' % [@prefix, queue]
+      @http.send_request('DELETE', path)
+    end
+
+    def get_message(queue)
+      response = @http.get('%s/queues/%s' % [@prefix, queue])
+      if response.code == "200" and response.body.length > 0
+        @unmarshal.call(response.body)
+      else
+        nil
+      end
+    end
+
+    def get_all_messages(queue)
+      path = '%s/queues/%s' % [@prefix, queue]
+      response = @http.get(path, {'Range' => 'all'})
+      if response.code == "200" and response.body.length > 0
+        messages = response.body.split("\n")
+        messages.map(&@unmarshal)
+      else
+        nil
+      end
+
+    end
+
+    def make_topic_monitor(topic)
+      return nil # not implemented
+    end
   end
 
   def Pubsub.connect(url, exchange_name, marshal=-> x {x}, unmarshal=-> x {x})
