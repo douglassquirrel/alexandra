@@ -4,6 +4,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from json import dumps
 from re import match
 from sys import argv
+from time import time as now
 
 INDEX_TEMPLATE = '''
 <!DOCTYPE html>
@@ -26,9 +27,11 @@ class Resources:
     def __init__(self):
         self.resources = {}
 
-    def add(self, path, content_type, content):
+    def add(self, path, content_type, content, retain_for = None):
         self.resources[path] = {'content_type': content_type,
                                 'content': content}
+        if retain_for is not None:
+            self.resources[path]['retain_until'] = now() + retain_for
 
     def get(self, path):
         if path in self.resources:
@@ -38,6 +41,17 @@ class Resources:
             return self._index_response(m.group(1), m.group(2))
         else:
             return None
+
+    def tidy(self):
+        expired = filter(self._has_expired, self.resources.keys())
+        map(self._remove_resource, expired)
+
+    def _has_expired(self, path):
+        resource = self.resources[path]
+        return 'retain_until' in resource and now() > resource['retain_until']
+
+    def _remove_resource(self, path):
+        del self.resources[path]
 
     def _index_response(self, root, protocol):
         paths = self._paths_in(root)
@@ -74,11 +88,17 @@ class LibraryHandler(BaseHTTPRequestHandler):
 
         content_type = self.headers['Content-Type']
         length = int(self.headers['Content-Length'])
+        if 'Retain-For' in self.headers:
+            retain_for = int(self.headers.get('Retain-For'))
+        else:
+            retain_for = None
+
         content = self.rfile.read(length)
-        self.server.resources.add(self.path, content_type, content)
+        self.server.resources.add(self.path, content_type, content, retain_for)
 
         self.send_response(200)
         self.end_headers()
+        self.server.resources.tidy()
 
     def do_GET(self):
         resource = self.server.resources.get(self.path)
@@ -91,6 +111,7 @@ class LibraryHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', len(resource['content']))
         self.end_headers()
         self.wfile.write(resource['content'])
+        self.server.resources.tidy()
 
     def log_message(self, format, *args):
         pass
