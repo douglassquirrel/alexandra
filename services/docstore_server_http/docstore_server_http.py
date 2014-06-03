@@ -1,10 +1,11 @@
 #! /usr/bin/python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from datetime import datetime
 from json import dumps
 from re import match
+from sqlite3 import connect as sqlite_connect
 from sys import argv
-from time import time as now
 
 INDEX_TEMPLATE = '''
 <!DOCTYPE html>
@@ -23,38 +24,52 @@ INDEX_TEMPLATE = '''
 '''
 LINK_TEMPLATE = '<li><a href="%s">%s</a></li>'
 
+CREATE_ITEMS_SQL = '''
+CREATE TABLE items
+    (id INTEGER PRIMARY KEY,
+     path TEXT,
+     time TIMESTAMP,
+     content_type TEXT,
+     content TEXT)
+'''
+ADD_ITEM_SQL = '''
+INSERT INTO items
+    (path, content, content_type, time)
+    values (?, ?, ?, ?)
+'''
+GET_LATEST_ITEM_SQL = '''
+SELECT content_type, content FROM items
+    WHERE path = ?
+    ORDER BY time DESC LIMIT 1
+'''
+GET_ALL_PATHS_SQL = 'SELECT path FROM items WHERE path like ?'
+
 class Resources:
     def __init__(self):
-        self.resources = {}
+        self._connection = sqlite_connect(':memory:')
+        self._connection.execute(CREATE_ITEMS_SQL)
 
-    def add(self, path, content_type, content, retain_for = None):
-        self.resources[path] = {'content_type': content_type,
-                                'content': content}
-        if retain_for is not None:
-            self.resources[path]['retain_until'] = now() + retain_for
+    def add(self, path, content_type, content, timestamp=None):
+        if timestamp is None:
+            timestamp = datetime.now()
+        with self._connection:
+            self._connection.execute(ADD_ITEM_SQL,
+                                     (path, content, content_type, timestamp))
 
     def get(self, path):
-        if path in self.resources:
-            return self.resources[path]
+        result = self._connection.execute(GET_LATEST_ITEM_SQL, (path,))
+        items = result.fetchall()
+        if len(items) > 0:
+            return {'content_type': items[0][0], 'content': items[0][1]}
         m = match(r"(.*)/index.(\w*)$", path)
         if m is not None:
             return self._index_response(m.group(1), m.group(2))
         else:
             return None
 
-    def tidy(self):
-        expired = filter(self._has_expired, self.resources.keys())
-        map(self._remove_resource, expired)
-
-    def _has_expired(self, path):
-        resource = self.resources[path]
-        return 'retain_until' in resource and now() > resource['retain_until']
-
-    def _remove_resource(self, path):
-        del self.resources[path]
-
     def _index_response(self, root, protocol):
-        paths = self._paths_in(root)
+        result = self._connection.execute(GET_ALL_PATHS_SQL, (root + '%',))
+        paths = [r[0] for r in result.fetchall()]
         if protocol == 'html':
             content_type = 'text/html'
             content = self._html_index(root, paths)
@@ -64,12 +79,6 @@ class Resources:
         else:
             return None
         return {'content_type': content_type, 'content': content}
-
-    def _all_paths(self):
-        return self.resources.keys()
-
-    def _paths_in(self, root):
-        return sorted(filter(lambda p: p.startswith(root), self._all_paths()))
 
     def _html_index(self, root, paths):
         links = [LINK_TEMPLATE % (p,p) for p in paths]
@@ -88,17 +97,11 @@ class LibraryHandler(BaseHTTPRequestHandler):
 
         content_type = self.headers['Content-Type']
         length = int(self.headers['Content-Length'])
-        if 'Retain-For' in self.headers:
-            retain_for = int(self.headers.get('Retain-For'))
-        else:
-            retain_for = None
-
         content = self.rfile.read(length)
-        self.server.resources.add(self.path, content_type, content, retain_for)
+        self.server.resources.add(self.path, content_type, content)
 
         self.send_response(200)
         self.end_headers()
-        self.server.resources.tidy()
 
     def do_GET(self):
         resource = self.server.resources.get(self.path)
@@ -111,7 +114,6 @@ class LibraryHandler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', len(resource['content']))
         self.end_headers()
         self.wfile.write(resource['content'])
-        self.server.resources.tidy()
 
     def log_message(self, format, *args):
         pass
