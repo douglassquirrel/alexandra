@@ -42,7 +42,7 @@ install_docstore('install_service',
                  [docstore_url], docstore_url, 'services')
 sleep(1)
 
-for name in ['emcee', 'pubsub_ws', 'executioner']:
+for name in ['publisher', 'emcee', 'pubsub_ws', 'executioner']:
     install_message = {'name': name,
                        'sources': ['/services/%s' % (name,), '/libraries'],
                        'options': [docstore_url],
