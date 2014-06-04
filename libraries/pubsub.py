@@ -44,7 +44,7 @@ class AMQPConnection:
         self.consume_queue(queue, f)
 
     def consume_all(self, f):
-        queue = self.subscribe('*')
+        queue = self.subscribe('#')
         def callback(ch, method, properties, body):
             amqp_topic = method.routing_key
             context, topic = amqp_topic.split('.', 1)
@@ -160,7 +160,7 @@ def connect(url, context, marshal=identity, unmarshal=identity):
     return connection_classes[protocol](url, context, marshal, unmarshal)
 
 def firehose(url):
-    return connect(url, '*')
+    return connect(url, '#')
 
 class Alarm:
     def __init__(self, duration):
