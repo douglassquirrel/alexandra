@@ -5,7 +5,8 @@ from pubsub import firehose
 from sys import argv
 
 def publish(context, topic, message, docstore):
-    print 'Context: %s Topic: %s Message: %s' % (context, topic, message)
+    if not context.startswith('game-'):
+        print 'Context: %s Topic: %s Message: %s' % (context, topic, message)
 
 docstore_url = argv[1]
 docstore = docstore_connect(docstore_url)
