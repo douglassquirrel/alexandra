@@ -6,7 +6,7 @@ from sys import argv
 
 def publish(context, topic, message, docstore):
     if not context.startswith('game-'):
-        print 'Context: %s Topic: %s Message: %s' % (context, topic, message)
+        docstore.put(message, '/messages/%s/%s' % (context, topic))
 
 docstore_url = argv[1]
 docstore = docstore_connect(docstore_url)
