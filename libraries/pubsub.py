@@ -43,6 +43,16 @@ class AMQPConnection:
         queue = self.subscribe(topic)
         self.consume_queue(queue, f)
 
+    def consume_all(self, f):
+        queue = self.subscribe('*')
+        def callback(ch, method, properties, body):
+            amqp_topic = method.routing_key
+            context, topic = amqp_topic.split('.', 1)
+            f(context, topic, self.unmarshal(body))
+
+        self._channel.basic_consume(callback, queue=queue, no_ack=True)
+        self._channel.start_consuming()
+
     def get_message(self, queue):
         raw_message = self._channel.basic_get(0, queue=queue, no_ack=True)[2]
         if raw_message is None:
@@ -99,6 +109,9 @@ class HTTPConnection:
         queue = self.subscribe(topic)
         self.consume_queue(queue, f)
 
+    def consume_all(self, f):
+        pass #not implemented
+
     def get_message(self, queue):
         url = '%s/queues/%s' % (self._root_url, queue)
         message = self._visit_url(url)
@@ -145,6 +158,9 @@ def identity(x):
 def connect(url, context, marshal=identity, unmarshal=identity):
     protocol = match(r"(\w+)://", url).group(1)
     return connection_classes[protocol](url, context, marshal, unmarshal)
+
+def firehose(url):
+    return connect(url, '*')
 
 class Alarm:
     def __init__(self, duration):

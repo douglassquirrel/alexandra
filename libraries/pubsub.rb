@@ -43,6 +43,10 @@ module Pubsub
       consume_queue(queue, &block)
     end
 
+    def consume_all(&block)
+      return nil # not implemented
+    end
+
     def get_message(queue)
       delivery_info, properties, raw_message = queue.pop
       if nil != raw_message
@@ -117,6 +121,10 @@ module Pubsub
       consume_queue(queue, &block)
     end
 
+    def consume_all(&block)
+      return nil # not implemented
+    end
+
     def unsubscribe(topic)
       path = '%s/queues/%s' % [@prefix, queue]
       @http.send_request('DELETE', path)
@@ -165,6 +173,10 @@ module Pubsub
     protocol = %r{(\w+)://}.match(url)[1]
     conn_class = connection_classes[protocol]
     return conn_class.new(url, context, marshal, unmarshal)
+  end
+
+  def Pubsub.firehose(url)
+    return nil # not implemented
   end
 
   class Alarm
