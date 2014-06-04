@@ -1,27 +1,30 @@
 require 'bunny'
 require 'net/http'
 
+EXCHANGE = 'alexandra'
 HTTP_PATIENCE_SEC = 1
 
 module Pubsub
 
   class AMQPConnection
-    def initialize(url, exchange_name, marshal, unmarshal)
+    def initialize(url, context, marshal, unmarshal)
       host = %r{amqp://([\w\d\.]+)}.match(url)[1]
       conn = Bunny.new(:hostname => host)
       conn.start
       @channel = conn.create_channel
-      @exchange = @channel.topic(exchange_name)
+      @exchange = @channel.topic(EXCHANGE)
+      @context = context
       @marshal, @unmarshal = marshal, unmarshal
     end
 
     def publish(topic, message)
-      @exchange.publish(@marshal.call(message), :routing_key => topic)
+      @exchange.publish(@marshal.call(message),
+                        :routing_key => @context + '.' + topic)
     end
 
     def subscribe(topic)
       queue = @channel.queue("")
-      queue.bind(@exchange, :routing_key => topic)
+      queue.bind(@exchange, :routing_key => @context + '.' + topic)
       return queue
     end
 
@@ -77,11 +80,11 @@ module Pubsub
   end
 
   class HTTPConnection
-    def initialize(url, exchange_name, marshal, unmarshal)
+    def initialize(url, context, marshal, unmarshal)
       m = %r{http://([\w\d\.]+):(\d+)}.match(url)
       host, port = m[1], m[2].to_i
       @http = Net::HTTP.new(host, port)
-      @prefix = '/exchanges/%s' % exchange_name
+      @prefix = '/contexts/%s' % context
       @marshal, @unmarshal = marshal, unmarshal
     end
 
@@ -157,11 +160,11 @@ module Pubsub
     end
   end
 
-  def Pubsub.connect(url, exchange_name, marshal=-> x {x}, unmarshal=-> x {x})
+  def Pubsub.connect(url, context, marshal=-> x {x}, unmarshal=-> x {x})
     connection_classes = {'amqp' => AMQPConnection, 'http' => HTTPConnection}
     protocol = %r{(\w+)://}.match(url)[1]
     conn_class = connection_classes[protocol]
-    return conn_class.new(url, exchange_name, marshal, unmarshal)
+    return conn_class.new(url, context, marshal, unmarshal)
   end
 
   class Alarm

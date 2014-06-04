@@ -8,22 +8,22 @@
     <h2>Publishing a message</h2>
     <ul>
       <li><strong>Method</strong>: POST</li>
-      <li><strong>Inputs</strong>: <em>exchange</em> and <em>topic</em>
+      <li><strong>Inputs</strong>: <em>context</em> and <em>topic</em>
                                    to which you want to publish</li>
       <li><strong>URL</strong>:
-         <a href="/exchanges/[exchange]/[topic]">
-           /exchanges/[exchange]/[topic]
+         <a href="/contexts/[context]/[topic]">
+           /contexts/[context]/[topic]
          </a></li>
       <li><strong>Contents:</strong> The message to be published</li>
     </ul>
     <h2>Subscribe to a topic</h2>
     <ul>
       <li><strong>Method</strong>: GET</li>
-      <li><strong>Inputs</strong>: <em>exchange</em> and <em>topic</em>
+      <li><strong>Inputs</strong>: <em>context</em> and <em>topic</em>
                                    to which you wish to subscribe</li>
       <li><strong>URL</strong>:
-         <a href="/exchanges/[exchange]/[topic]">
-           /exchanges/[exchange]/[topic]
+         <a href="/contexts/[context]/[topic]">
+           /contexts/[context]/[topic]
          </a></li>
       <li><strong>Returns:</strong> String giving the name of a
                                     queue subscribed to the topic
@@ -32,13 +32,13 @@
     <h2>Unsubscribe</h2>
     <ul>
       <li><strong>Method</strong>: DELETE</li>
-      <li><strong>Inputs</strong>: Name of the relevant <em>exchange</em>,
+      <li><strong>Inputs</strong>: Name of the relevant <em>context</em>,
                                    and the name of the <em>queue</em> on
-                                   that exchange that you want to
+                                   that context that you want to
                                    unsubscribe</li>
       <li><strong>URL</strong>:
-         <a href="/exchanges/[exchange]/queues/[queue]">
-           /exchanges/[exchange]/queues/[queue]
+         <a href="/contexts/[context]/queues/[queue]">
+           /contexts/[context]/queues/[queue]
          </a></li>
       <li><strong>Returns:</strong> Nothing</li>
     </ul>
@@ -58,13 +58,13 @@
         Defaults (if headers omitted) are <strong>Range: head</strong> and
         <strong>Patience: 0</strong>.
       </li>
-      <li><strong>Inputs</strong>: Name of the relevant <em>exchange</em>,
+      <li><strong>Inputs</strong>: Name of the relevant <em>context</em>,
                                    and the name of the <em>queue</em> on
-                                   that exchange from which you
+                                   that context from which you
                                    want to get messages</li>
       <li><strong>URL</strong>:
-         <a href="/exchanges/[exchange]/queues/[queue]">
-           /exchanges/[exchange]/queues/[queue]
+         <a href="/contexts/[context]/queues/[queue]">
+           /contexts/[context]/queues/[queue]
          </a></li>
       <li><strong>Returns:</strong> Zero or more messages, as strings
           separated by newlines.</li>

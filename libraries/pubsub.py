@@ -3,29 +3,30 @@ from re import match
 from time import time as now
 from urllib2 import build_opener, HTTPHandler, Request, urlopen
 
+EXCHANGE = 'alexandra'
 HTTP_PATIENCE_SEC = 1
 
 class AMQPConnection:
-    def __init__(self, url, exchange_name, marshal, unmarshal):
-        self._exchange_name = exchange_name
+    def __init__(self, url, context, marshal, unmarshal):
+        self._context = context
         self.marshal, self.unmarshal = marshal, unmarshal
         host = match(r"amqp://([\w\d\.]+)", url).group(1)
         connection = BlockingConnection(ConnectionParameters(host))
         self._channel = connection.channel()
-        self._channel.exchange_declare(exchange=self._exchange_name,
+        self._channel.exchange_declare(exchange=EXCHANGE,
                                        type='topic')
 
     def publish(self, topic, message):
-        self._channel.basic_publish(exchange=self._exchange_name,
-                                    routing_key=topic,
+        self._channel.basic_publish(exchange=EXCHANGE,
+                                    routing_key=self._context + '.' + topic,
                                     body=self.marshal(message))
 
     def subscribe(self, topic):
         result = self._channel.queue_declare()
         queue = result.method.queue
-        self._channel.queue_bind(exchange=self._exchange_name,
+        self._channel.queue_bind(exchange=EXCHANGE,
                                  queue=queue,
-                                 routing_key=topic)
+                                 routing_key=self._context + '.' + topic)
         return queue
 
     def unsubscribe(self, queue):
@@ -71,8 +72,8 @@ class AMQPConnection:
         return TopicMonitor(self, topic)
 
 class HTTPConnection:
-    def __init__(self, url, exchange_name, marshal, unmarshal):
-        self._root_url = '%s/exchanges/%s' % (url, exchange_name)
+    def __init__(self, url, context, marshal, unmarshal):
+        self._root_url = '%s/contexts/%s' % (url, context)
         self.marshal, self.unmarshal = marshal, unmarshal
 
     def publish(self, topic, message):
@@ -141,9 +142,9 @@ connection_classes = {'amqp': AMQPConnection, 'http': HTTPConnection}
 def identity(x):
     return x
 
-def connect(url, exchange_name, marshal=identity, unmarshal=identity):
+def connect(url, context, marshal=identity, unmarshal=identity):
     protocol = match(r"(\w+)://", url).group(1)
-    return connection_classes[protocol](url, exchange_name, marshal, unmarshal)
+    return connection_classes[protocol](url, context, marshal, unmarshal)
 
 class Alarm:
     def __init__(self, duration):

@@ -19,15 +19,15 @@ def root_handler(verb, headers, content):
         doc_html = f.read()
     return {'code': 200, 'content': doc_html, 'type': 'text/html'}
 
-def topic_handler(verb, headers, content, docstore_url, exchange, topic):
+def topic_handler(verb, headers, content, docstore_url, context, topic):
     if verb == 'POST':
         pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, exchange)
+        pubsub = pubsub_connect(pubsub_url, context)
         pubsub.publish(topic, content)
         return {'code': 200, 'content': ''}
     elif verb == 'GET':
         pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, exchange)
+        pubsub = pubsub_connect(pubsub_url, context)
         queue = pubsub.subscribe(topic)
         return {'code': 200, 'content': queue}
     else:
@@ -39,10 +39,10 @@ def get_message_range(pubsub, queue, timeout, range_value):
     elif range_value == 'all':
         return '\n'.join(pubsub.get_all_messages(queue))
 
-def queue_handler(verb, headers, content, docstore_url, exchange, queue):
+def queue_handler(verb, headers, content, docstore_url, context, queue):
     if verb == 'GET':
         pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, exchange)
+        pubsub = pubsub_connect(pubsub_url, context)
         range_header = headers.get('Range', 'head')
         timeout = float(headers.get('Patience', 0))
         message = get_message_range(pubsub, queue, timeout, range_header)
@@ -51,15 +51,15 @@ def queue_handler(verb, headers, content, docstore_url, exchange, queue):
         return {'code': 200, 'content': message}
     elif verb == 'DELETE':
         pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, exchange)
+        pubsub = pubsub_connect(pubsub_url, context)
         pubsub.unsubscribe(queue)
         return {'code': 200, 'content': ''}
     else:
         return wrong_verb(expected='DELETE or GET', got=verb)
 
-handlers = [('/$',                                 root_handler),
-            ('/exchanges/([^/]+)/([^/]+)$',        topic_handler),
-            ('/exchanges/([^/]+)/queues/([^/]+)$', queue_handler)]
+handlers = [('/$',                                root_handler),
+            ('/contexts/([^/]+)/([^/]+)$',        topic_handler),
+            ('/contexts/([^/]+)/queues/([^/]+)$', queue_handler)]
 
 class PubSubHandler(BaseHTTPRequestHandler):
     def _parse_path(self):
