@@ -33,16 +33,25 @@ if docstore.wait_until_up() is False:
     print 'Could not start docstore'
     exit(1)
 docstore.put(pubsub_url, '/services/pubsub')
-docstore_alex = docstore_connect(docstore_url + '/alexandra')
+
+publisher_dir = abspath(pathjoin(services_dir, 'publisher'))
+install_dir('publisher', [publisher_dir, libraries_dir],
+            [docstore_url], docstore_url, 'services')
+sleep(1)    
+
+pubsub_alex = pubsub_connect(pubsub_url, 'alexandra')
 root = abspath('..')
-publish_dir(root, root, docstore_alex)
+num_files_published = publish_dir(root, root, pubsub_alex)
+files = []
+while len(files) < num_files_published:
+    files = loads(docstore_connect(docstore_url).get('/alexandra/index.json'))
 
 install_docstore('install_service',
                  ['/services/install_service', '/libraries', '/infralib'],
                  [docstore_url], docstore_url, 'services')
-sleep(1)
+sleep(1)    
 
-for name in ['publisher', 'emcee', 'pubsub_ws', 'executioner']:
+for name in ['emcee', 'pubsub_ws', 'executioner']:
     install_message = {'name': name,
                        'sources': ['/services/%s' % (name,), '/libraries'],
                        'options': [docstore_url],
