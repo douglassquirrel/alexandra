@@ -17,10 +17,10 @@ def heart_monitor(game_id, pubsub):
 game_id, game_name, docstore_url = argv[1:4]
 with open('game.json', 'r') as game_file:
     game_data = load(game_file)
-docstore = docstore_connect(docstore_url + "/" + game_id)
-docstore.put(dumps(game_data), '/game.json')
-
 pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+game_pubsub = pubsub_connect(pubsub_url, game_id, marshal=dumps)
+game_pubsub.publish('game.json', game_data)
+
 process_pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps)
 for (comp_name, copies) in game_data['components'].items():
     sources = ['/games/%s/components/%s' % (game_name, comp_name), '/libraries']
