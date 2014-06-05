@@ -31,7 +31,7 @@ for (comp_name, copies) in game_data['components'].items():
                        'copies': copies}
     process_pubsub.publish('install', install_message)
 
-game_pubsub = pubsub_connect(pubsub_url, 'game-' + game_id)
+game_pubsub = pubsub_connect(pubsub_url, 'games/' + game_id)
 game_pubsub.publish('game_state', 'running')
 print 'Now running game %s' % (game_id,)
 heart_monitor(game_id, game_pubsub)
