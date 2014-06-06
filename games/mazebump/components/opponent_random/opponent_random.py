@@ -13,9 +13,8 @@ COLOUR = [255, 0, 0]
 DELTAS = [(-5, 0), (5, 0), (0, -5), (0, 5)]
 
 def init(alex):
-    alex.docstore.put(dumps({'width': WIDTH, 'height': HEIGHT,
-                             'colour': COLOUR}),
-                      '/opponent_random/opponent_random.json')
+    alex.pubsub.publish('opponent_random/opponent_random.json',
+                        {'width': WIDTH, 'height': HEIGHT, 'colour': COLOUR})
 
 def move(world, alex):
     if NAME not in world['entities']:

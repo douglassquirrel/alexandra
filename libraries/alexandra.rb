@@ -28,7 +28,7 @@ module Alexandra
       @pubsub = Pubsub::connect(pubsub_url, 'games/' + game_id,
                                 marshal=-> x {x.to_json},
                                 unmarshal=-> x {JSON.parse(x)})
-      @docstore = Docstore::connect(docstore_url + "/" + game_id)
+      @docstore = Docstore::connect(docstore_url + "/games/" + game_id)
       @config = JSON.parse(@docstore.get('/game.json'))
     end
   end

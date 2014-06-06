@@ -11,9 +11,9 @@ COLOUR = [255, 0, 0]
 DELTAS = [[-5, 0], [5, 0], [0, -5], [0, 5]]
 
 def init(alex)
-  alex.docstore.put({'width' => WIDTH, 'height' => HEIGHT,
-                      'colour' => COLOUR}.to_json,
-                      '/opponent_random/opponent_random.json')
+  alex.pubsub.publish('opponent_random/opponent_random.json',
+                      {'width' => WIDTH, 'height' => HEIGHT,
+                        'colour' => COLOUR})
 end
 
 def move(world, alex)

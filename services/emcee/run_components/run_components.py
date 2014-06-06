@@ -18,7 +18,7 @@ game_id, game_name, docstore_url = argv[1:4]
 with open('game.json', 'r') as game_file:
     game_data = load(game_file)
 pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-game_pubsub = pubsub_connect(pubsub_url, game_id, marshal=dumps)
+game_pubsub = pubsub_connect(pubsub_url, 'games/' + game_id, marshal=dumps)
 game_pubsub.publish('game.json', game_data)
 
 process_pubsub = pubsub_connect(pubsub_url, 'process', marshal=dumps)

@@ -19,5 +19,5 @@ class Alexandra:
             pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
         self.pubsub = pubsub_connect(pubsub_url, 'games/' + game_id,
                                      marshal=dumps, unmarshal=loads)
-        self.docstore = docstore_connect(docstore_url + '/' + game_id)
+        self.docstore = docstore_connect(docstore_url + '/games/' + game_id)
         self.config = loads(self.docstore.get('/game.json'))

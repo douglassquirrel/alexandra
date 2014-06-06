@@ -14,7 +14,7 @@ MOVE_DELAY = 5
 
 def init(alex):
     entity_data = {'width': WIDTH, 'height': HEIGHT, 'colour': COLOUR}
-    alex.docstore.put(dumps(entity_data), '/player/player.json')
+    alex.pubsub.publish('player/player.json', entity_data)
     return alex.pubsub.subscribe('commands.player')
 
 def update(world, commands_queue, alex):
