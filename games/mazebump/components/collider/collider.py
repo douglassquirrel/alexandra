@@ -35,7 +35,7 @@ def get_rect_for(entity, position, alex):
     return Rect(top_left, bottom_right)
 
 def get_dimensions(entity, library_url):
-    data = loads(alex.docstore.get('/%s/%s.json' % (entity, entity)))
+    data = alex.pubsub.get_current_message('%s/%s.json' % (entity, entity))
     return (data['width'], data['height'])
 
 alex = Alexandra(argv[1], argv[2])

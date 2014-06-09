@@ -49,12 +49,12 @@ while len(files) < num_files_published:
 install_docstore('install_service',
                  ['/services/install_service', '/libraries', '/infralib'],
                  [docstore_url], docstore_url, 'services')
-sleep(1)    
+sleep(2)    
 
-for name in ['emcee', 'pubsub_ws', 'executioner']:
+for name in ['docstore_locator', 'emcee', 'pubsub_ws', 'executioner']:
     install_message = {'name': name,
                        'sources': ['/services/%s' % (name,), '/libraries'],
-                       'options': [docstore_url],
+                       'options': [docstore_url, pubsub_url],
                        'group': 'services'}
     pubsub.publish('install', install_message)
 

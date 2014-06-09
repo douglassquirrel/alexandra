@@ -1,3 +1,4 @@
+from docstore import connect as docstore_connect
 from pika import BlockingConnection, ConnectionParameters
 from re import match
 from time import time as now
@@ -13,20 +14,33 @@ class AMQPConnection:
         host = match(r"amqp://([\w\d\.]+)", url).group(1)
         connection = BlockingConnection(ConnectionParameters(host))
         self._channel = connection.channel()
-        self._channel.exchange_declare(exchange=EXCHANGE,
-                                       type='topic')
+        self._channel.exchange_declare(exchange=EXCHANGE, type='topic')
+        self._init_docstore()
+
+    def _init_docstore(self):
+        location_queue = self._subscribe_raw('docstore', 'location')
+        self._publish_raw('docstore', 'locate', 'locate')
+        docstore_url = self._get_message_block_raw(location_queue, timeout=1)
+        self._docstore = docstore_connect(docstore_url)
 
     def publish(self, topic, message):
+        self._publish_raw(self._context, topic, self.marshal(message))
+
+    def _publish_raw(self, context, topic, message):
         self._channel.basic_publish(exchange=EXCHANGE,
-                                    routing_key=self._context + '.' + topic,
-                                    body=self.marshal(message))
+                                    routing_key=context + '.' + topic,
+                                    body=message)
+
 
     def subscribe(self, topic):
+        return self._subscribe_raw(self._context, topic)
+
+    def _subscribe_raw(self, context, topic):
         result = self._channel.queue_declare()
         queue = result.method.queue
         self._channel.queue_bind(exchange=EXCHANGE,
                                  queue=queue,
-                                 routing_key=self._context + '.' + topic)
+                                 routing_key=context + '.' + topic)
         return queue
 
     def unsubscribe(self, queue):
@@ -54,11 +68,14 @@ class AMQPConnection:
         self._channel.start_consuming()
 
     def get_message(self, queue):
-        raw_message = self._channel.basic_get(0, queue=queue, no_ack=True)[2]
+        raw_message = self._get_message_raw(queue)
         if raw_message is None:
             return None
         else:
             return self.unmarshal(raw_message)
+
+    def _get_message_raw(self, queue):
+        return self._channel.basic_get(0, queue=queue, no_ack=True)[2]
 
     def get_all_messages(self, queue):
         messages = []
@@ -70,13 +87,26 @@ class AMQPConnection:
                 messages.append(message)
 
     def get_message_block(self, queue, timeout=None):
+        return self._get_message_block(queue, self.get_message, timeout)
+
+    def _get_message_block_raw(self, queue, timeout=None):
+        return self._get_message_block(queue, self._get_message_raw, timeout)
+
+    def _get_message_block(self, queue, fetcher, timeout):
         alarm = Alarm(timeout)
         while True:
-            message = self.get_message(queue)
+            message = fetcher(queue)
             if message is not None:
                 return message
             if alarm.is_ringing():
                 return None
+
+    def get_current_message(self, topic):
+        raw_message = self._docstore.get('/%s/%s' % (self._context, topic))
+        if raw_message is None:
+            return None
+        else:
+            return self.unmarshal(raw_message)
 
     def make_topic_monitor(self, topic):
         return TopicMonitor(self, topic)
