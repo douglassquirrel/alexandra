@@ -1,4 +1,5 @@
 require 'bunny'
+require './docstore.rb'
 require 'net/http'
 
 EXCHANGE = 'alexandra'
@@ -8,23 +9,39 @@ module Pubsub
 
   class AMQPConnection
     def initialize(url, context, marshal, unmarshal)
+      @context = context
+      @marshal, @unmarshal = marshal, unmarshal
       host = %r{amqp://([\w\d\.]+)}.match(url)[1]
       conn = Bunny.new(:hostname => host)
       conn.start
       @channel = conn.create_channel
       @exchange = @channel.topic(EXCHANGE)
-      @context = context
-      @marshal, @unmarshal = marshal, unmarshal
+      init_docstore()
+    end
+
+    def init_docstore()
+      location_queue = subscribe_raw('docstore', 'location')
+      publish_raw('docstore', 'locate', 'locate')
+      docstore_url = get_message_block_raw(location_queue, timeout=1)
+      @docstore = Docstore::connect(docstore_url)
     end
 
     def publish(topic, message)
-      @exchange.publish(@marshal.call(message),
-                        :routing_key => @context + '.' + topic)
+      publish_raw(@context, topic, @marshal.call(message))
+    end
+
+    def publish_raw(context, topic, message)
+      @exchange.publish(message,
+                        :routing_key => context + '.' + topic)
     end
 
     def subscribe(topic)
+      return subscribe_raw(@context, topic)
+    end
+
+    def subscribe_raw(context, topic)
       queue = @channel.queue("")
-      queue.bind(@exchange, :routing_key => @context + '.' + topic)
+      queue.bind(@exchange, :routing_key => context + '.' + topic)
       return queue
     end
 
@@ -48,12 +65,15 @@ module Pubsub
     end
 
     def get_message(queue)
-      delivery_info, properties, raw_message = queue.pop
-      if nil != raw_message
+      if nil != get_message_raw(queue)
         @unmarshal.call(raw_message)
       else
         nil
       end
+    end
+
+    def get_message_raw(queue)
+      return queue.pop[2]
     end
 
     def get_all_messages(queue)
@@ -67,14 +87,31 @@ module Pubsub
     end
 
     def get_message_block(queue, timeout=nil)
+      get_message_block_internal(queue, timeout, method(:get_message))
+    end
+
+    def get_message_block_raw(queue, timeout=nil)
+      get_message_block_internal(queue, timeout, method(:get_message_raw))
+    end
+
+    def get_message_block_internal(queue, timeout, fetcher)
       alarm = Alarm.new(timeout)
       loop do
-        message = get_message(queue)
+        message = fetcher.call(queue)
         if message != nil
           return message
         elsif alarm.is_ringing()
           return nil
         end
+      end
+    end
+
+    def get_current_message(topic)
+      raw_message = @docstore.get('/%s/%s' % [@context, topic])
+      if raw_message == nil
+        return nil
+      else
+        return @unmarshal.call(raw_message)
       end
     end
 

@@ -10,7 +10,7 @@ from sys import argv
 
 docstore_url, game_name = argv[1], argv[2]
 
-options = [docstore_url, game_name]
+options = [game_name]
 if len(argv) > 3:
     pubsub_url = argv[3]
     print 'Using pubsub URL %s' % pubsub_url

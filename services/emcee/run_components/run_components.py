@@ -26,7 +26,7 @@ for (comp_name, copies) in game_data['components'].items():
     sources = ['/games/%s/components/%s' % (game_name, comp_name), '/libraries']
     install_message = {'name': comp_name,
                        'sources': sources,
-                       'options': [docstore_url, game_id],
+                       'options': [game_id],
                        'group': game_id,
                        'copies': copies}
     process_pubsub.publish('install', install_message)

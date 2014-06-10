@@ -14,7 +14,7 @@ def publish_world(tick, alex, movement_queue, world):
         world['movements'][name] = m
     alex.pubsub.publish('world', world)
 
-alex = Alexandra(argv[1], argv[2])
+alex = Alexandra(argv[1])
 movement_queue = alex.pubsub.subscribe('decision_movement.*')
 world_monitor = alex.pubsub.make_topic_monitor('world')
 initial_world = {'tick': 0, 'movements': {}, 'entities': {}}

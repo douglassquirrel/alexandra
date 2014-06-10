@@ -1,8 +1,8 @@
 #! /usr/bin/python
 
 from alexandra import Alexandra, request_game
-from docstore import connect as docstore_connect
 from json import loads
+from os import getenv
 from pygame import display, event, init, key, quit, Surface, surfarray
 from pygame.locals import KEYDOWN, K_DOWN, K_LEFT, K_RIGHT, K_UP, QUIT
 from StringIO import StringIO
@@ -64,15 +64,15 @@ def draw_rectangle(width, height, colour, position, window):
     rectangle.unlock()
     window.blit(rectangle, position)
 
-docstore_url, game_name = argv[1], argv[2]
+game_name = argv[1]
 game_id = str(uuid4())
 print "Starting client for game %s with id %s" % (game_name, game_id)
 
-pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+pubsub_url = getenv('ALEXANDRA_PUBSUB')
 if request_game(game_name, game_id, pubsub_url) is False:
     print "Could not start game"
     exit(1)
 
-alex = Alexandra(docstore_url, game_id)
+alex = Alexandra(game_id)
 window = init_window(alex.config['field_width'], alex.config['field_height'])
 alex.pubsub.consume_topic('world', lambda w: update(window, w, alex))

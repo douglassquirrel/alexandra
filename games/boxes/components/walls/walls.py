@@ -49,7 +49,7 @@ def send_movement(position, orientation, index, tick, alex):
                 'from': position, 'to': position}
     alex.pubsub.publish('movement.' + name, movement)
 
-alex = Alexandra(argv[1], argv[2])
+alex = Alexandra(argv[1])
 init(alex)
 walls = list(make_maze(alex.config['field_width']/CELL_WIDTH,
                        alex.config['field_height']/CELL_WIDTH))

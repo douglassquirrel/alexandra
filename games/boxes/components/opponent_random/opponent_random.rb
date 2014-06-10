@@ -3,7 +3,7 @@
 require './alexandra.rb'
 require 'json'
 
-INDEX = ARGV[2].to_i
+INDEX = ARGV[1].to_i
 NAME = 'opponent_random_%s' % INDEX
 WIDTH = 20
 HEIGHT = 20
@@ -47,6 +47,6 @@ def send_movement(from_position, to_position, tick, alex)
   alex.pubsub.publish('movement.opponent_random', movement)
 end
 
-alex = Alexandra::Alex.new(ARGV[0], ARGV[1])
+alex = Alexandra::Alex.new(ARGV[0])
 init(alex)
 alex.pubsub.consume_topic('world') { |w| move(w, alex)}

@@ -1,5 +1,5 @@
-from docstore import connect as docstore_connect
 from json import dumps, loads
+from os import getenv
 from pubsub import connect as pubsub_connect
 
 def request_game(game_name, game_id, pubsub_url, timeout=5):
@@ -13,10 +13,9 @@ def request_game(game_name, game_id, pubsub_url, timeout=5):
     return game_pubsub.get_message_block(game_state_queue, timeout) is not None
 
 class Alexandra:
-    def __init__(self, docstore_url, game_id, pubsub_url=None):
+    def __init__(self, game_id):
         self.game_id = game_id
-        if pubsub_url is None:
-            pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+        pubsub_url = getenv('ALEXANDRA_PUBSUB')
         self.pubsub = pubsub_connect(pubsub_url, 'games/' + game_id,
                                      marshal=dumps, unmarshal=loads)
         self.config = self.pubsub.get_current_message('game.json')

@@ -1,4 +1,3 @@
-require './docstore.rb'
 require 'json'
 require './pubsub.rb'
 
@@ -20,16 +19,13 @@ module Alexandra
   class Alex
     attr_reader :game_id, :pubsub, :docstore, :config
 
-    def initialize(docstore_url, game_id, pubsub_url=nil)
+    def initialize(game_id)
       @game_id = game_id
-      if pubsub_url == nil
-        pubsub_url = Docstore::connect(docstore_url).get('/services/pubsub')
-      end
+      pubsub_url = ENV['ALEXANDRA_PUBSUB']
       @pubsub = Pubsub::connect(pubsub_url, 'games/' + game_id,
                                 marshal=-> x {x.to_json},
                                 unmarshal=-> x {JSON.parse(x)})
-      @docstore = Docstore::connect(docstore_url + "/games/" + game_id)
-      @config = JSON.parse(@docstore.get('/game.json'))
+      @config = pubsub.get_current_message('game.json')
     end
   end
 end

@@ -38,7 +38,7 @@ def get_dimensions(entity, library_url):
     data = alex.pubsub.get_current_message('%s/%s.json' % (entity, entity))
     return (data['width'], data['height'])
 
-alex = Alexandra(argv[1], argv[2])
+alex = Alexandra(argv[1])
 world_monitor = alex.pubsub.make_topic_monitor('world')
 alex.pubsub.consume_topic('movement.*',
                   lambda m: add_collisions(m, world_monitor.latest(), alex))

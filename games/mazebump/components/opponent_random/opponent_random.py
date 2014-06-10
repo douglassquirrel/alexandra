@@ -5,7 +5,7 @@ from json import dumps
 from random import choice as randomchoice
 from sys import argv
 
-INDEX = int(argv[3])
+INDEX = int(argv[2])
 NAME = 'opponent_random_%d' % (INDEX,)
 WIDTH = 20
 HEIGHT = 20
@@ -42,6 +42,6 @@ def send_movement(from_position, to_position, tick, alex):
                 'from': from_position, 'to': to_position}
     alex.pubsub.publish('movement.opponent_random', movement)
 
-alex = Alexandra(argv[1], argv[2])
+alex = Alexandra(argv[1])
 init(alex)
 alex.pubsub.consume_topic('world', lambda w: move(w, alex))
