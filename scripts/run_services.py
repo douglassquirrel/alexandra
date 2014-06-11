@@ -32,7 +32,6 @@ docstore = docstore_connect(docstore_url)
 if docstore.wait_until_up() is False:
     print 'Could not start docstore'
     exit(1)
-docstore.put(pubsub_url, '/services/pubsub')
 
 publisher_dir = abspath(pathjoin(services_dir, 'publisher'))
 install_dir('publisher', [publisher_dir, libraries_dir],

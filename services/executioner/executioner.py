@@ -2,7 +2,7 @@
 
 from docstore import connect as docstore_connect
 from json import loads
-from os import getpid, kill
+from os import getenv, getpid, kill
 from platform import node
 from pubsub import connect as pubsub_connect
 from signal import SIGKILL
@@ -30,9 +30,6 @@ def kill_group(group_path, docstore):
 
 docstore_url = argv[1]
 docstore = docstore_connect(docstore_url)
-pubsub_url = docstore.wait_and_get('/services/pubsub')
-if pubsub_url is None:
-    print 'No pubsub data on docstore, exiting'
-    exit(1)
+pubsub_url = getenv('ALEXANDRA_PUBSUB')
 pubsub = pubsub_connect(pubsub_url, 'process', unmarshal=loads)
 pubsub.consume_topic('kill', lambda m: kill_group(m, docstore))

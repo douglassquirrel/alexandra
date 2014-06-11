@@ -2,8 +2,8 @@
 
 HEARTBEAT_TIMEOUT = 5
 
-from docstore import connect as docstore_connect
 from json import load, dumps
+from os import getenv
 from pubsub import connect as pubsub_connect
 from sys import argv
 
@@ -14,10 +14,10 @@ def heart_monitor(game_id, pubsub):
         message = pubsub.get_message_block(queue=heartbeat_queue,
                                            timeout=HEARTBEAT_TIMEOUT)
 
-game_id, game_name, docstore_url = argv[1:4]
+game_id, game_name = argv[1:3]
 with open('game.json', 'r') as game_file:
     game_data = load(game_file)
-pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
+pubsub_url = getenv('ALEXANDRA_PUBSUB')
 game_pubsub = pubsub_connect(pubsub_url, 'games/' + game_id, marshal=dumps)
 game_pubsub.publish('game.json', game_data)
 

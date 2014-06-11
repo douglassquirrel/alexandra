@@ -3,6 +3,7 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from docstore import connect as docstore_connect
 from json import loads
+from os import getenv
 from pubsub import connect as pubsub_connect
 from re import match
 from SocketServer import ForkingMixIn
@@ -19,15 +20,13 @@ def root_handler(verb, headers, content):
         doc_html = f.read()
     return {'code': 200, 'content': doc_html, 'type': 'text/html'}
 
-def topic_handler(verb, headers, content, docstore_url, context, topic):
+def topic_handler(verb, headers, content, context, topic):
+    pubsub_url = getenv('ALEXANDRA_PUBSUB')
+    pubsub = pubsub_connect(pubsub_url, context)
     if verb == 'POST':
-        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, context)
         pubsub.publish(topic, content)
         return {'code': 200, 'content': ''}
     elif verb == 'GET':
-        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, context)
         queue = pubsub.subscribe(topic)
         return {'code': 200, 'content': queue}
     else:
@@ -39,10 +38,10 @@ def get_message_range(pubsub, queue, timeout, range_value):
     elif range_value == 'all':
         return '\n'.join(pubsub.get_all_messages(queue))
 
-def queue_handler(verb, headers, content, docstore_url, context, queue):
+def queue_handler(verb, headers, content, context, queue):
+    pubsub_url = getenv('ALEXANDRA_PUBSUB')
+    pubsub = pubsub_connect(pubsub_url, context)
     if verb == 'GET':
-        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, context)
         range_header = headers.get('Range', 'head')
         timeout = float(headers.get('Patience', 0))
         message = get_message_range(pubsub, queue, timeout, range_header)
@@ -50,8 +49,6 @@ def queue_handler(verb, headers, content, docstore_url, context, queue):
             message = ''
         return {'code': 200, 'content': message}
     elif verb == 'DELETE':
-        pubsub_url = docstore_connect(docstore_url).get('/services/pubsub')
-        pubsub = pubsub_connect(pubsub_url, context)
         pubsub.unsubscribe(queue)
         return {'code': 200, 'content': ''}
     else:
@@ -71,8 +68,7 @@ class PubSubHandler(BaseHTTPRequestHandler):
             matched = matches[0]
             params = matched[0].groups()
             handler = matched[1]
-            docstore_url = self.server.docstore_url
-            return lambda v, h, c: handler(v, h, c, docstore_url, *params)
+            return lambda v, h, c: handler(v, h, c, *params)
 
     def do_GET(self):
         self._do_request('GET')
@@ -122,5 +118,4 @@ config = loads(config_json)
 host, port = config['pubsub_host'], config['pubsub_port']
 
 server = ForkingHTTPServer((host, port), PubSubHandler)
-server.docstore_url = docstore_url
 server.serve_forever()
