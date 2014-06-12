@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from alexandra import Alexandra, request_game
 from json import loads
@@ -52,6 +52,8 @@ def do_entity_update(entity_data, window, alex):
     entity, position = entity_data['entity'], entity_data['position']
     entity_topic = '%s/%s.json' % (entity, entity)
     entity_data = alex.pubsub.get_current_message(entity_topic)
+    if entity_data is None:
+        return
     width, height = entity_data['width'], entity_data['height']
     colour = list(entity_data['colour'])
     draw_rectangle(width, height, colour, position, window)

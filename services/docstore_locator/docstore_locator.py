@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from pubsub import connect as pubsub_connect
 from sys import argv

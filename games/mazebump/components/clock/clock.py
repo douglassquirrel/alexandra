@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from alexandra import Alexandra
 from sys import argv

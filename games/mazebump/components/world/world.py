@@ -1,9 +1,11 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from alexandra import Alexandra
 from sys import argv
 
 def publish_world(tick, alex, movement_queue, world):
+    if world is None:
+        return
     world['tick'] = tick
     movements = alex.pubsub.get_all_messages(movement_queue)
     tick_movements = filter(lambda(m): m['tick'] == tick - 1, movements)

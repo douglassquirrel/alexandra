@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime

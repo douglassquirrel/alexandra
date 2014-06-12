@@ -18,4 +18,6 @@ class Alexandra:
         pubsub_url = getenv('ALEXANDRA_PUBSUB')
         self.pubsub = pubsub_connect(pubsub_url, 'games/' + game_id,
                                      marshal=dumps, unmarshal=loads)
-        self.config = self.pubsub.get_current_message('game.json')
+        self.config = None
+        while self.config is None:
+            self.config = self.pubsub.get_current_message('game.json')

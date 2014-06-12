@@ -1,5 +1,3 @@
-#! /usr/bin/python
-
 from docstore import connect
 from json import load, loads, dumps
 from os import access, chmod, listdir, makedirs, stat, X_OK

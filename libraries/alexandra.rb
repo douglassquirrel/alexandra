@@ -25,7 +25,10 @@ module Alexandra
       @pubsub = Pubsub::connect(pubsub_url, 'games/' + game_id,
                                 marshal=-> x {x.to_json},
                                 unmarshal=-> x {JSON.parse(x)})
-      @config = pubsub.get_current_message('game.json')
+      @config = nil
+      while @config == nil
+        @config = pubsub.get_current_message('game.json')
+      end
     end
   end
 end

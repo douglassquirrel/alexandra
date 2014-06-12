@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from docstore import connect as docstore_connect
 from json import loads

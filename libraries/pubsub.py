@@ -75,7 +75,7 @@ class AMQPConnection:
             return self.unmarshal(raw_message)
 
     def _get_message_raw(self, queue):
-        return self._channel.basic_get(0, queue=queue, no_ack=True)[2]
+        return self._channel.basic_get(queue=queue, no_ack=True)[2]
 
     def get_all_messages(self, queue):
         messages = []
