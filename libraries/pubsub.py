@@ -170,6 +170,15 @@ class HTTPConnection:
             if alarm.is_ringing():
                 return None
 
+    def get_current_message(self, topic):
+        url = '%s/%s' % (self._root_url, topic)
+        headers = [('Range', 'current')]
+        message = self._visit_url(url=url, headers=headers)
+        if len(message) == 0:
+            return None
+        else:
+            return self.unmarshal(message)
+
     def make_topic_monitor(self, topic):
         return TopicMonitor(self, topic)
 
