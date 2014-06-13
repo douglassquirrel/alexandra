@@ -7,7 +7,7 @@ module Alexandra
     emcee_pubsub = Pubsub::connect(pubsub_url, 'emcee',
                                   marshal=-> x {x.to_json},
                                   unmarshal=-> x {JSON.parse(x)})
-    game_pubsub = Pubsub::connect(pubsub_url, 'games/' + game_id)
+    game_pubsub = Pubsub::connect(pubsub_url, 'games-' + game_id)
     game_state_queue = game_pubsub.subscribe('game_state')
 
     game_info = {'name' => game_name, 'id' => game_id}
@@ -22,7 +22,7 @@ module Alexandra
     def initialize(game_id)
       @game_id = game_id
       pubsub_url = ENV['ALEXANDRA_PUBSUB']
-      @pubsub = Pubsub::connect(pubsub_url, 'games/' + game_id,
+      @pubsub = Pubsub::connect(pubsub_url, 'games-' + game_id,
                                 marshal=-> x {x.to_json},
                                 unmarshal=-> x {JSON.parse(x)})
       @config = nil

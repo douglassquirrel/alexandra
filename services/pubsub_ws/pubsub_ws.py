@@ -61,9 +61,9 @@ def queue_handler(verb, headers, content, context, queue):
     else:
         return wrong_verb(expected='DELETE or GET', got=verb)
 
-handlers = [('/$',                                root_handler),
-            ('/contexts/([^/]+)/([^/]+)$',        topic_handler),
-            ('/contexts/([^/]+)/queues/([^/]+)$', queue_handler)]
+handlers = [('/$',                             root_handler),
+            ('/contexts/([^/]+)/queues/(.+)$', queue_handler),
+            ('/contexts/([^/]+)/(.+)$',        topic_handler)]
 
 class PubSubHandler(BaseHTTPRequestHandler):
     def _parse_path(self):
