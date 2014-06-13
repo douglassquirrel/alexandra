@@ -27,8 +27,15 @@ def topic_handler(verb, headers, content, context, topic):
         pubsub.publish(topic, content)
         return {'code': 200, 'content': ''}
     elif verb == 'GET':
-        queue = pubsub.subscribe(topic)
-        return {'code': 200, 'content': queue}
+        range_header = headers.get('Range', 'queue')
+        if range_header == 'queue':
+            queue = pubsub.subscribe(topic)
+            return {'code': 200, 'content': queue}
+        elif range_header == 'current':
+            message = pubsub.get_current_message(topic)
+            if message is None:
+                message = ''
+            return {'code': 200, 'content': message}
     else:
         return wrong_verb(expected='GET or POST', got=verb)
 

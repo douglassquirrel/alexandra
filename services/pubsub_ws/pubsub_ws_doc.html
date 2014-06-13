@@ -16,18 +16,31 @@
          </a></li>
       <li><strong>Contents:</strong> The message to be published</li>
     </ul>
-    <h2>Subscribe to a topic</h2>
+    <h2>Subscribe to or get messages from a topic</h2>
     <ul>
+      <li><strong>Headers</strong>:
+        <ul>
+          <li><strong>Range: current</strong>. Get the most recent message published on this topic.</li>
+          <li><strong>Range: queue</strong>. Create and return a queue for this topic.</li>
+        </ul>
+        Default (if headers omitted) is <strong>Range: queue</strong>.
+      </li>
       <li><strong>Method</strong>: GET</li>
       <li><strong>Inputs</strong>: <em>context</em> and <em>topic</em>
-                                   to which you wish to subscribe</li>
+                                   from which you wish to get messages</li>
       <li><strong>URL</strong>:
          <a href="/contexts/[context]/[topic]">
            /contexts/[context]/[topic]
          </a></li>
-      <li><strong>Returns:</strong> String giving the name of a
-                                    queue subscribed to the topic
-                                    (see below)</li>
+      <li><strong>Returns:</strong> 
+        <ul>
+          <li>If Range set to "queue": String giving the name of a
+                                       queue subscribed to the topic</li>
+          <li>If Range set to "current": String giving the latest message
+                                         published on this topic (empty
+                                         string if no such message)</li>
+        </ul>
+      </li>
     </ul>
     <h2>Unsubscribe</h2>
     <ul>
@@ -42,7 +55,7 @@
          </a></li>
       <li><strong>Returns:</strong> Nothing</li>
     </ul>
-    <h2>Get messages</h2>
+    <h2>Get messages from a queue</h2>
     <ul>
       <li><strong>Method</strong>: GET</li>
       <li><strong>Headers</strong>:
