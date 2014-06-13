@@ -4,7 +4,7 @@
 "player_start_x": 5,
 "player_start_y": 5,
 "number_boxes": 20,
-"tick_seconds": 0.1,
+"tick_seconds": 0.2,
 "components": {"box_collisions": 1,
                "boxes": 1,
                "clock": 1,
