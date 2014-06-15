@@ -9,7 +9,7 @@
                "boxes": 1,
                "clock": 1,
                "collider": 1,
-               "opponent_random_py": 1,
+               "opponent_random_rb": 1,
                "player": 1,
                "umpire": 1,
                "walls": 1,
