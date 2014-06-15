@@ -3,11 +3,30 @@
 from alexandra import Alexandra
 from sys import argv
 
+def is_trigger(movement):
+    entity = movement['entity']
+    return entity.startswith('player') or entity.startswith('wall')
+
+def ok_movement(movements):
+    return len(filter(is_trigger, movements)) > 0
+
+def player_trigger(tick, movements):
+    two_ticks_ago = filter(lambda m: m['tick'] == tick-2, movements)
+    return len(filter(lambda m: m['entity'].startswith('player'),
+                      two_ticks_ago)) > 0
+
 def publish_world(tick, alex, movement_queue, world):
     world['tick'] = tick
-    movements = alex.pubsub.get_all_messages(movement_queue)
-    tick_movements = filter(lambda(m): m['tick'] == tick - 1, movements)
-    for m in tick_movements:
+    queue_movements = alex.pubsub.get_all_messages(movement_queue)
+    if not player_trigger(tick, world['movements'].values()) \
+            and not ok_movement(queue_movements):
+        if tick % 10 == 0:
+            alex.pubsub.publish('world', world)
+        return
+
+    last_tick_movements = filter(lambda(m): m['tick'] == tick - 1,
+                                 queue_movements)
+    for m in last_tick_movements:
         entity, index, position = m['entity'], m['index'], m['to']
         name = '%s_%d' % (entity, index)
         world['entities'][name] = {'entity': entity, 'index': index,

@@ -36,10 +36,11 @@ def draw(walls, world, alex):
                             world['entities'].keys())
     if len(walls_in_world) >= number_of_walls:
         return
-    indexes_in_world = sorted(map(lambda(w): int(w.partition('al_')[2]),
-                                  walls_in_world))
-    index = [i for i in range(number_of_walls) if i not in indexes_in_world][0]
-    draw_wall(index, walls[index], world['tick'], alex)
+    in_world = sorted(map(lambda(w): int(w.partition('al_')[2]),
+                          walls_in_world))
+    indexes = [i for i in range(number_of_walls) if i not in in_world][0:10]
+    for index in indexes:
+        draw_wall(index, walls[index], world['tick'], alex)
 
 def send_movement(position, orientation, index, tick, alex):
     entity = 'wall_%s' % orientation

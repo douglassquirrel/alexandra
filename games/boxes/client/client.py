@@ -18,6 +18,8 @@ def init_window(field_width, field_height):
 
 def update(window, world, alex):
     alex.pubsub.publish('heartbeat', now())
+    if world is None:
+        return
     do_world_update(window, world, alex)
     command = get_command()
     if command is not None:
@@ -75,4 +77,7 @@ if request_game(game_name, game_id, pubsub_url) is False:
 
 alex = Alexandra(game_id)
 window = init_window(alex.config['field_width'], alex.config['field_height'])
-alex.pubsub.consume_topic('world', lambda w: update(window, w, alex))
+world_monitor = alex.pubsub.make_topic_monitor('world')
+alex.pubsub.consume_topic('tick', lambda t: update(window,
+                                                   world_monitor.latest(),
+                                                   alex))

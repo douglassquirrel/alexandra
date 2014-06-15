@@ -17,23 +17,26 @@ def init(alex):
     alex.pubsub.publish('player/player.json', entity_data)
     return alex.pubsub.subscribe('commands.player')
 
-def update(world, commands_queue, alex):
+def is_wall_construction(tick, movement):
+    return movement['tick'] == tick-1 and movement['entity'].startswith('wall')
+
+def walls_under_construction(tick, movements):
+    return len(filter(lambda(m): is_wall_construction(tick, m), movements)) > 0
+
+def update(tick, world, commands_queue, alex):
+    if world is None \
+      or walls_under_construction(world['tick'], world['movements'].values()):
+        return
+
+    world['tick'] = tick
     if NAME not in world['entities']:
         position = (alex.config['player_start_x'],
                     alex.config['player_start_y'])
         send_movement(position, position, world['tick'], alex)
     else:
         commands = alex.pubsub.get_all_messages(commands_queue)
-        if len(commands) > 0 and movement_ok(world):
+        if len(commands) > 0:
             move(commands[-1], world, alex)
-
-def movement_ok(world):
-    if NAME not in world['movements']:
-        return True
-
-    last_movement = world['movements'][NAME]
-    time_since_last_move = world['tick'] - last_movement['tick']
-    return time_since_last_move >= MOVE_DELAY
 
 def move(command, world, alex):
     position = world['entities'][NAME]['position']
@@ -52,4 +55,6 @@ def send_movement(from_position, to_position, tick, alex):
 
 alex = Alexandra(argv[1])
 commands_queue = init(alex)
-alex.pubsub.consume_topic('world', lambda w: update(w, commands_queue, alex))
+world_monitor = alex.pubsub.make_topic_monitor('world')
+alex.pubsub.consume_topic('tick', lambda t: update(t, world_monitor.latest(),
+                                                   commands_queue, alex))
