@@ -200,6 +200,15 @@ module Pubsub
       end
     end
 
+    def get_current_message(topic)
+      response = @http.get('%s/%s' % [@prefix, topic], {'Range' => 'current'})
+      if response.code == "200" and response.body.length > 0
+        return @unmarshal.call(response.body)
+      else
+        return nil
+      end
+    end
+
     def make_topic_monitor(topic)
       return nil # not implemented
     end
