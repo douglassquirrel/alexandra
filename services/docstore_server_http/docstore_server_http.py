@@ -82,7 +82,7 @@ class Resources:
 
     def _html_index(self, root, paths):
         links = [LINK_TEMPLATE % (p,p) for p in paths]
-        return INDEX_TEMPLATE % (root, root, '\n'.join(links))
+        return INDEX_TEMPLATE % (root, root, '\n'.join(sorted(links)))
 
 class HTTPServerWithResources(HTTPServer):
     def __init__(self, server_address, RequestHandlerClass, resources):
