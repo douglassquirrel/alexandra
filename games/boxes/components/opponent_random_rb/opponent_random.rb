@@ -8,7 +8,7 @@ NAME = 'opponent_random_%s' % INDEX
 WIDTH = 20
 HEIGHT = 20
 COLOUR = [255, 0, 0]
-DELTAS = [[-5, 0], [5, 0], [0, -5], [0, 5]]
+DELTAS = [[-20, 0], [20, 0], [0, -20], [0, 20]]
 
 def init(alex)
   alex.pubsub.publish('opponent_random/opponent_random.json',

@@ -16,16 +16,7 @@ def init(alex):
     alex.pubsub.publish('opponent_random/opponent_random.json',
                         {'width': WIDTH, 'height': HEIGHT, 'colour': COLOUR})
 
-def is_wall_construction(tick, movement):
-    return movement['tick'] == tick-1 and movement['entity'].startswith('wall')
-
-def walls_under_construction(tick, movements):
-    return len(filter(lambda(m): is_wall_construction(tick, m), movements)) > 0
-
 def move(world, alex):
-    if walls_under_construction(world['tick'], world['movements'].values()):
-        return
-
     if NAME not in world['entities']:
         position = (alex.config['player_start_x'] + 80 * (INDEX + 1),
                     alex.config['player_start_y'])

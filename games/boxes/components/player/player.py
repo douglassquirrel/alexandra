@@ -17,15 +17,8 @@ def init(alex):
     alex.pubsub.publish('player/player.json', entity_data)
     return alex.pubsub.subscribe('commands.player')
 
-def is_wall_construction(tick, movement):
-    return movement['tick'] == tick-1 and movement['entity'].startswith('wall')
-
-def walls_under_construction(tick, movements):
-    return len(filter(lambda(m): is_wall_construction(tick, m), movements)) > 0
-
 def update(tick, world, commands_queue, alex):
-    if world is None \
-      or walls_under_construction(world['tick'], world['movements'].values()):
+    if world is None:
         return
 
     world['tick'] = tick
