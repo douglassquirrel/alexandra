@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 from alexandra import Alexandra
-from json import dumps
 from random import choice as randomchoice
 from sys import argv
 
