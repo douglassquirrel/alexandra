@@ -47,9 +47,18 @@ public class Pubsub {
 	visitURL(rootURL + "/queues/" + queue, null, "DELETE", null);
     }
 
-    public Object getMessage(String queue) {
+    public HashMap getMessage(String queue) {
 	String message = visitURL(rootURL + "/queues/" + queue, null,
 				  "GET", null);
+	return unmarshal(message);
+    }
+
+    public HashMap getCurrentMessage(String topic) {
+	String url = rootURL + "/" + topic;
+	String[][] headers = new String[1][2];
+	headers[0][0] = "Range";
+	headers[0][1] = "current";
+	String message = visitURL(url, null, "GET", headers);
 	return unmarshal(message);
     }
 
@@ -90,7 +99,7 @@ public class Pubsub {
 
 	    int responseCode = conn.getResponseCode();
 	    if (responseCode != 200) {
-		return "";
+		return null;
 	    }
 
 	    InputStream inS = conn.getInputStream();
