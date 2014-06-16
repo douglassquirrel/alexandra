@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import org.json.simple.JSONValue;
 
 /* Supports only HTTP connections and JSON marshal/unmarshal. */
 public class Pubsub {
@@ -15,7 +17,7 @@ public class Pubsub {
 	this.rootURL = url + "/contexts/" + context;
     }
 
-    public void publish(String topic, Object message) {
+    public void publish(String topic, HashMap message) {
 	visitURL(rootURL + "/" + topic, marshal(message), "POST", null); 
     }
 
@@ -51,20 +53,20 @@ public class Pubsub {
 	return unmarshal(message);
     }
 
-    private String visitURL(String url) {
-	return visitURL(url, null, "GET", null);
+    private String marshal(HashMap message) {
+	return JSONValue.toJSONString(message);
     }
 
-    private String marshal(Object message) {
-	return message.toString(); //JSON
-    }
-
-    private Object unmarshal(String message) {
+    private HashMap unmarshal(String message) {
 	if (message == null) {
 	    return null;
 	} else {
-	    return message; // JSON
+	    return (HashMap) JSONValue.parse(message);
 	}
+    }
+
+    private String visitURL(String url) {
+	return visitURL(url, null, "GET", null);
     }
 
     private String visitURL(String url, String data, String method,
